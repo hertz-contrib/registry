@@ -3,7 +3,7 @@ name: Tests
 on: [ push, pull_request ]
 
 jobs:
-  lint-and-ut:
+  ut:
     runs-on: [ self-hosted, X64 ]
     steps:
       - uses: actions/checkout@v3
@@ -19,14 +19,6 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
-      - name: Vet
-        run: make vet
-
-      - name: Lint
-        run: |
-          go install mvdan.cc/gofumpt@v0.2.0
-          test -z "$(gofumpt -l -extra .)" 
 
       - name: Unit Test
         run: make test

@@ -17,7 +17,7 @@ function find_modules() {
 		\) -name 'go.mod' -print0 | xargs -0 -I {} dirname {}
 }
 
-all_modules=$(find_modules)
+all_modules=$(util::find_modules)
 
 # test all mod
 function test() {

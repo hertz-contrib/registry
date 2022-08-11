@@ -4,18 +4,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# find all go mod path
-# returns an array contains mod path
-function find_modules() {
-	find . -not \( \
-		\( \
-		-path './output' \
-		-o -path './.git' \
-		-o -path '*/third_party/*' \
-		-o -path '*/vendor/*' \
-		\) -prune \
-		\) -name 'go.mod' -print0 | xargs -0 -I {} dirname {}
-}
+HOME=$(
+	cd "$(dirname "${BASH_SOURCE[0]}")" &&
+		cd .. &&
+		pwd
+)
+
+source "${HOME}/hack/util.sh"
 
 all_modules=$(util::find_modules)
 

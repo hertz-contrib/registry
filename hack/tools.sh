@@ -34,7 +34,7 @@ function vet() {
 	for mod in $all_modules; do
 			pushd "$mod" >/dev/null &&
 				echo "go vet $(sed -n 1p go.mod | cut -d ' ' -f2)" &&
-				go vet -stdmethods=false $(go list ./...)
+				go vet -stdmethods=false ./...
 			popd >/dev/null || exit
 	done
 }

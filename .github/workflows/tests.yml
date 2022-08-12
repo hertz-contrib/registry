@@ -4,7 +4,16 @@ on: [ push, pull_request ]
 
 jobs:
   ut:
-    runs-on: [ self-hosted, X64 ]
+    runs-on: ubuntu-latest
+
+    services:
+      nacos:
+        image: 'nacos/nacos-server:2.0.3'
+        ports:
+          - '8848:8848'
+        env:
+          MODE: standalone
+
     steps:
       - uses: actions/checkout@v3
 
@@ -22,3 +31,7 @@ jobs:
 
       - name: Unit Test
         run: make test
+        env:
+          serverAddr: 127.0.0.1
+          serverPort: 8848
+          namespace: public

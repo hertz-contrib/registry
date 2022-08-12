@@ -39,4 +39,5 @@ jobs:
         with:
           version: latest
           working-directory: ${{ matrix.workdir }}
+          args: -E gofumpt
           skip-pkg-cache: true

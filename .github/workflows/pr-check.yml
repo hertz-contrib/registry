@@ -39,5 +39,5 @@ jobs:
         with:
           version: latest
           working-directory: ${{ matrix.workdir }}
-          args: --enable-all --timeout=10m --exclude-use-default=false --tests=false --disable=gochecknoinits,gochecknoglobals,exhaustive,nakedret,exhaustivestruct
+          args: -E gofumpt
           skip-pkg-cache: true

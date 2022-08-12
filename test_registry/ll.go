@@ -1,6 +1,8 @@
 package test_registry
 
-import "errors"
+import (
+	"errors"
+)
 
 func Add(a, b int) int {
 	E()

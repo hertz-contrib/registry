@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   ut:
-    runs-on: [ self-hosted, X64 ]
+    runs-on: ubuntu-latest
     services:
       etcd:
         image: gcr.io/etcd-development/etcd:v3.5.0

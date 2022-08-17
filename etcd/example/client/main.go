@@ -23,6 +23,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"go.etcd.io/etcd/clientv3"
 
 	"github.com/hertz-contrib/registry/etcd"
 )
@@ -30,11 +31,20 @@ import (
 var wg sync.WaitGroup
 
 func main() {
+
+	etcdCli, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"127.0.0.1:2879"},
+		DialTimeout: 2 * time.Second,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
 	}
-	r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:20000"}, 2*time.Second)
+	r, err := etcd.NewEtcdResolver(etcdCli, 2*time.Second)
 	if err != nil {
 		panic(err)
 	}

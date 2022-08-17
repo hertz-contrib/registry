@@ -139,15 +139,6 @@ func (e *etcdRegistry) delNode(path string) error {
 	return nil
 }
 
-func NewEtcdRegistry(servers []string, sessionTimeout time.Duration) (registry.Registry, error) {
-	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   servers,
-		DialTimeout: sessionTimeout,
-	})
-	if err != nil {
-		// handle error!
-		fmt.Printf("connect to etcd failed, err:%v\n", err)
-		return nil, err
-	}
+func NewEtcdRegistry(cli *clientv3.Client, sessionTimeout time.Duration) (registry.Registry, error) {
 	return &etcdRegistry{cli, sessionTimeout}, nil
 }

@@ -32,16 +32,8 @@ type etcdResolver struct {
 	timeout time.Duration
 }
 
-func NewEtcdResolver(servers []string, sessionTimeout time.Duration) (discovery.Resolver, error) {
-	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   servers,
-		DialTimeout: sessionTimeout,
-	})
-	if err != nil {
-		// handle error!
-		fmt.Printf("connect to etcd failed, err:%v\n", err)
-		return nil, err
-	}
+func NewEtcdResolver(cli *clientv3.Client, sessionTimeout time.Duration) (discovery.Resolver, error) {
+	
 	return &etcdResolver{cli, sessionTimeout}, nil
 }
 

@@ -7,5 +7,7 @@ require (
 	github.com/coreos/etcd v2.3.8+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/stretchr/testify v1.8.0
 	go.etcd.io/etcd v2.3.8+incompatible
+	go.etcd.io/etcd/client/v3 v3.5.4
 )

@@ -15,13 +15,20 @@ jobs:
         image: 'zookeeper:3.7.0'
         ports:
           - '2181:2181'
+      etcd:
+        image: bitnami/etcd:latest
+        ports:                    
+          - "2379:2379"
+          - "2380:2380"
+        env:            
+          ALLOW_NONE_AUTHENTICATION: yes 
+          ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
       nacos:
         image: 'nacos/nacos-server:2.0.3'
         ports:
           - '8848:8848'
         env:
           MODE: standalone
-
     steps:
       - uses: actions/checkout@v3
 

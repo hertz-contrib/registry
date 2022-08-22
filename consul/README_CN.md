@@ -1,15 +1,14 @@
-# registry-consul (This is a community driven project)
+# registry-consul (这是一个由社区驱动的项目)
 
-[中文](README_CN.md)
+[English](README.md)
 
-Support Hertz to use Consul for service registration and discovery
+支持**Hertz**使用**Consul**进行服务注册与发现
 
-## Docs
+## 文档
 
-### Server
+### 服务端
 
-#### Basic Usage
-
+#### 基本使用
 ```
 import (
 	"context"
@@ -55,17 +54,15 @@ func main() {
 }
 ```
 
-#### Customize Service Check
-
-registry has a default config for service check as below
-
+#### 自定义服务检查
+注册中心默认配置服务检查，如下：
 ```
 check.Timeout = "5s"
 check.Interval = "5s"
 check.DeregisterCriticalServiceAfter = "1m"
 ```
 
-you can also use `WithCheck` to modify your config
+你也可以使用`WithCheck`来修改配置
 
 ```
 import (
@@ -95,7 +92,7 @@ func main() {
 
 ```
 
-### Client
+### 客户端
 
 ```
 import (
@@ -128,14 +125,13 @@ func main() {
 }
 ```
 
-## Example
+## 使用样例
+服务端：`example/server/main.go`
 
-Server：`example/server/main.go`
+客户端：`example/client/main.go`
 
-Client：`example/client/main.go`
+## 兼容性
 
-## Compatibility
+与Consul保持兼容。
 
-Compatible with consul.
-
-maintained by: [Lemonfish](https://github.com/LemonFish873310466)
+维护者: [Lemonfish](https://github.com/LemonFish873310466)

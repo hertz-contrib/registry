@@ -74,6 +74,9 @@ func TestZookeeperDiscovery(t *testing.T) {
 	// resolve again
 	result, err = res.Resolve(context.Background(), target)
 	assert.Nil(t, err)
+	assert.Empty(t, result.Instances)
+	assert.Equal(t, "product", result.CacheKey)
+
 }
 
 func TestZookeeperResolverWithAuth(t *testing.T) {
@@ -124,4 +127,7 @@ func TestZookeeperResolverWithAuth(t *testing.T) {
 	// resolve again
 	result, err = res.Resolve(context.Background(), target)
 	assert.Nil(t, err)
+	assert.Empty(t, result.Instances)
+	assert.Equal(t, "product", result.CacheKey)
+
 }

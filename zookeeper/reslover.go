@@ -70,7 +70,7 @@ func (z *zookeeperResolver) Resolve(ctx context.Context, desc string) (discovery
 		return discovery.Result{}, err
 	}
 	if len(eps) == 0 {
-		return discovery.Result{}, fmt.Errorf("no instance remains for %v", desc)
+		return discovery.Result{}, nil
 	}
 	instances, err := z.getInstances(eps, path)
 	if err != nil {

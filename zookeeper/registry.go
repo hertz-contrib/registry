@@ -137,19 +137,18 @@ func (z *zookeeperRegistry) createNode(path string, content []byte, ephemeral bo
 	if ephemeral {
 		flag = zk.FlagEphemeral
 	}
+	var acl []zk.ACL
 	if z.authOpen {
-		_, err := z.conn.Create(path, content, flag, zk.DigestACL(zk.PermAll, z.user, z.password))
-		if err != nil {
-			return fmt.Errorf("create node [%s] with auth error, cause %w", path, err)
-		}
-		return nil
+		acl = zk.DigestACL(zk.PermAll, z.user, z.password)
 	} else {
-		_, err := z.conn.Create(path, content, flag, zk.WorldACL(zk.PermAll))
-		if err != nil {
-			return fmt.Errorf("create node [%s] error, cause %w", path, err)
-		}
-		return nil
+		acl = zk.WorldACL(zk.PermAll)
 	}
+	_, err := z.conn.Create(path, content, flag, acl)
+	if err != nil {
+		return fmt.Errorf("create node [%s] error, cause %w", path, err)
+	}
+	return nil
+
 }
 
 func (z *zookeeperRegistry) deleteNode(path string) error {

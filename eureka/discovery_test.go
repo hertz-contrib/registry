@@ -16,11 +16,12 @@ package eureka
 
 import (
 	"context"
-	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/app/client/discovery"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -67,8 +68,8 @@ func TestEurekaDiscovery(t *testing.T) {
 
 	// 4. expect no instance when do discovery again
 	result, err = res.Resolve(context.Background(), target)
-	//assert.Equal(t, )
-	//assert.Equal(t, kerrors.ErrNoMoreInstance, err)
+	// assert.Equal(t, )
+	// assert.Equal(t, kerrors.ErrNoMoreInstance, err)
 	assert.Equal(t, 0, len(result.Instances))
 }
 
@@ -143,7 +144,7 @@ func TestEurekaDiscoveryWithMultipleInstance(t *testing.T) {
 
 	// 6. expect no instances when do discovery
 	result, err = res.Resolve(context.Background(), target)
-	//assert.Equal(t, kerrors.ErrNoMoreInstance, err)
+	// assert.Equal(t, kerrors.ErrNoMoreInstance, err)
 	assert.Equal(t, 0, len(result.Instances))
 }
 

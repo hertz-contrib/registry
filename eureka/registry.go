@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hudl/fargo"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/hudl/fargo"
 )
 
 var _ registry.Registry = (*eurekaRegistry)(nil)
@@ -29,7 +30,6 @@ type eurekaRegistry struct {
 
 // NewEurekaRegistry creates a eureka registry.
 func NewEurekaRegistry(servers []string, heatBeatInterval time.Duration) registry.Registry {
-
 	conn := fargo.NewConn(servers...)
 
 	return &eurekaRegistry{
@@ -42,7 +42,6 @@ func NewEurekaRegistry(servers []string, heatBeatInterval time.Duration) registr
 
 // NewEurekaRegistryFromConfig creates a eureka registry.
 func NewEurekaRegistryFromConfig(config fargo.Config, heatBeatInterval time.Duration) registry.Registry {
-
 	conn := fargo.NewConnFromConfig(config)
 
 	return &eurekaRegistry{
@@ -55,7 +54,6 @@ func NewEurekaRegistryFromConfig(config fargo.Config, heatBeatInterval time.Dura
 
 // NewEurekaRegistryFromConn creates a eureka registry.
 func NewEurekaRegistryFromConn(conn fargo.EurekaConnection, heatBeatInterval time.Duration) registry.Registry {
-
 	return &eurekaRegistry{
 		eurekaConn:       &conn,
 		registryIns:      make(map[string]*eurekaHeartbeat),

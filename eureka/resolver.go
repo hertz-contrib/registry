@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/hudl/fargo"
 )
@@ -18,7 +19,6 @@ type eurekaResolver struct {
 
 // NewEurekaResolver creates a eureka resolver.
 func NewEurekaResolver(servers []string) discovery.Resolver {
-
 	conn := fargo.NewConn(servers...)
 
 	return &eurekaResolver{eurekaConn: &conn}

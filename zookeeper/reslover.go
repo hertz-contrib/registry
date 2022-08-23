@@ -92,7 +92,7 @@ func (z *zookeeperResolver) getInstances(eps []string, path string) ([]discovery
 			if port == "" {
 				return []discovery.Instance{}, fmt.Errorf("missing port when parse node [%s]", ep)
 			}
-			if host == "" {
+			if host == "" || host == "::" {
 				return []discovery.Instance{}, fmt.Errorf("missing host when parse node [%s]", ep)
 			}
 			ins, err := z.detailEndPoints(path, ep)

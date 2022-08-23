@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-zookeeper/zk"
+	"github.com/hertz-contrib/registry/zookeeper/utils"
 )
 
 const (
@@ -119,7 +119,7 @@ func buildPath(info *registry.Info) (string, error) {
 			return "", fmt.Errorf("registry info addr missing port")
 		}
 		if host == "" {
-			ipv4 := utils.LocalIP()
+			ipv4, err := utils.GetLocalIPv4Address()
 			if err != nil {
 				return "", fmt.Errorf("get local ipv4 error, cause %w", err)
 			}
@@ -156,7 +156,6 @@ func (z *zookeeperRegistry) createNode(path string, content []byte, ephemeral bo
 		return fmt.Errorf("create node [%s] error, cause %w", path, err)
 	}
 	return nil
-
 }
 
 func (z *zookeeperRegistry) deleteNode(path string) error {

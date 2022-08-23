@@ -24,7 +24,6 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/go-zookeeper/zk"
-
 	"github.com/hertz-contrib/registry/zookeeper/entity"
 	"github.com/hertz-contrib/registry/zookeeper/utils"
 )

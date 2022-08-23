@@ -23,7 +23,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/hertz-contrib/registry/zookeeper/utils"
 )
 

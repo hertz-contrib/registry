@@ -105,3 +105,8 @@ go run ./example/standard/client/main.go
 2022/08/21 23:31:59.392249 main.go:44: [Info] code=200,body={"ping":"pong2"}
 2022/08/21 23:31:59.392379 main.go:44: [Info] code=200,body={"ping":"pong2"}
 ```
+
+## Compatibility
+Compatible with server (3.4.0 - 3.7.0), If you want to use older server version, please modify the version in `Makefile` to test.
+
+[zookeeper server version list]( https://zookeeper.apache.org/documentation.html)

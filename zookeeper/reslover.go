@@ -67,7 +67,7 @@ func (z *zookeeperResolver) Resolve(ctx context.Context, desc string) (discovery
 		return discovery.Result{}, err
 	}
 	if len(eps) == 0 {
-		return discovery.Result{}, nil
+		return discovery.Result{CacheKey: desc}, nil
 	}
 	instances, err := z.getInstances(eps, path)
 	if err != nil {

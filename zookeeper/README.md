@@ -76,9 +76,7 @@ func main() {
 
 ### run docker
 
-- make prepare
-
-```bash
+```shell
 make prepare
 ```
 
@@ -93,6 +91,7 @@ go run ./example/standard/server/main.go
 ```go
 go run ./example/standard/client/main.go
 ```
+
 ```go
 2022/08/21 23:31:59.391243 main.go:44: [Info] code=200,body={"ping":"pong2"}
 2022/08/21 23:31:59.391493 main.go:44: [Info] code=200,body={"ping":"pong2"}

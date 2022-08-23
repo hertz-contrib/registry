@@ -22,8 +22,8 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/hertz-contrib/registry/zookeeper/utils"
 )
 
 func TestZookeeperDiscovery(t *testing.T) {
@@ -50,7 +50,7 @@ func TestZookeeperDiscovery(t *testing.T) {
 		instance := result.Instances[0]
 		host, port, err := net.SplitHostPort(instance.Address().String())
 		assert.Nil(t, err)
-		local, _ := utils.GetLocalIPv4Address()
+		local := utils.LocalIP()
 		if host != local {
 			t.Errorf("instance host is mismatch, expect: %s, in fact: %s", local, host)
 		}
@@ -100,7 +100,7 @@ func TestZookeeperResolverWithAuth(t *testing.T) {
 		instance := result.Instances[0]
 		host, port, err := net.SplitHostPort(instance.Address().String())
 		assert.Nil(t, err)
-		local, _ := utils.GetLocalIPv4Address()
+		local := utils.LocalIP()
 		if host != local {
 			t.Errorf("instance host is mismatch, expect: %s, in fact: %s", local, host)
 		}

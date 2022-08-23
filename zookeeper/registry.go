@@ -23,10 +23,19 @@ import (
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-zookeeper/zk"
-	"github.com/hertz-contrib/registry/zookeeper/entity"
-	"github.com/hertz-contrib/registry/zookeeper/utils"
 )
+
+const (
+	Separator = "/"
+	Scheme    = "digest" // For auth
+)
+
+type RegistryEntity struct {
+	Weight int
+	Tags   map[string]string
+}
 
 type zookeeperRegistry struct {
 	conn           *zk.Conn
@@ -42,7 +51,7 @@ func (z *zookeeperRegistry) Register(info *registry.Info) error {
 	if err != nil {
 		return err
 	}
-	content, err := json.Marshal(&entity.RegistryEntity{Weight: info.Weight, Tags: info.Tags})
+	content, err := json.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
 	if err != nil {
 		return err
 	}
@@ -78,7 +87,7 @@ func NewZookeeperRegistryWithAuth(servers []string, sessionTimeout time.Duration
 		return nil, err
 	}
 	auth := []byte(fmt.Sprintf("%s:%s", user, password))
-	err = conn.AddAuth(utils.Scheme, auth)
+	err = conn.AddAuth(Scheme, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -101,22 +110,22 @@ func (z *zookeeperRegistry) validRegistryInfo(info *registry.Info) error {
 // buildPath path format as follows: {serviceName}/{ip}:{port}
 func buildPath(info *registry.Info) (string, error) {
 	var path string
-	if !strings.HasPrefix(info.ServiceName, utils.Separator) {
-		path = utils.Separator + info.ServiceName
+	if !strings.HasPrefix(info.ServiceName, Separator) {
+		path = Separator + info.ServiceName
 	}
 
 	if host, port, err := net.SplitHostPort(info.Addr.String()); err == nil {
 		if port == "" {
 			return "", fmt.Errorf("registry info addr missing port")
 		}
-		if host == "" {
-			ipv4, err := utils.GetLocalIPv4Address()
+		if host == "::" {
+			ipv4 := utils.LocalIP()
 			if err != nil {
 				return "", fmt.Errorf("get local ipv4 error, cause %w", err)
 			}
-			path = path + utils.Separator + ipv4 + ":" + port
+			path = path + Separator + ipv4 + ":" + port
 		} else {
-			path = path + utils.Separator + host + ":" + port
+			path = path + Separator + host + ":" + port
 		}
 	} else {
 		return "", fmt.Errorf("parse registry info addr error")
@@ -125,7 +134,7 @@ func buildPath(info *registry.Info) (string, error) {
 }
 
 func (z *zookeeperRegistry) createNode(path string, content []byte, ephemeral bool) error {
-	i := strings.LastIndex(path, utils.Separator)
+	i := strings.LastIndex(path, Separator)
 	if i > 0 {
 		err := z.createNode(path[0:i], nil, false)
 		if err != nil && !errors.Is(err, zk.ErrNodeExists) {

@@ -6,7 +6,7 @@ Zookeeper as service discovery for Hertz.
 
 ### server 
 
-**[example/basic/server/main.go](example/basic/server/main.go)**
+**[example/standard/server/main.go](example/standard/server/main.go)**
 
 ```go
 import (
@@ -45,7 +45,7 @@ func main() {
 
 ### Client
 
-**[example/basic/client/main.go](example/basic/client/main.go)**
+**[example/standard/client/main.go](example/standard/client/main.go)**
 
 ```go
 import (
@@ -85,13 +85,13 @@ make prepare
 ### run server
 
 ```go
-go run ./example/basic/server/main.go
+go run ./example/standard/server/main.go
 ```
 
 ### run client
 
 ```go
-go run ./example/basic/client/main.go
+go run ./example/standard/client/main.go
 ```
 ```go
 2022/08/21 23:31:59.391243 main.go:44: [Info] code=200,body={"ping":"pong2"}

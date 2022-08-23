@@ -61,7 +61,7 @@ func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
 	instances := make([]discovery.Instance, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	// use the etcd get method with the prefix
-	resp, err := e.client.Get(ctx, desc, clientv3.WithPrefix())
+	resp, err := e.client.Get(ctx, desc + Separator, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Printf("get from etcd failed, err:%v\n", err)

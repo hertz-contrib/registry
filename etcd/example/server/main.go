@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -28,37 +27,30 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
-var wg sync.WaitGroup
-
 func main() {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2879"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 		DialTimeout: 2 * time.Second,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		r, err := etcd.NewEtcdRegistry(cli, time.Second*2)
-		if err != nil {
-			panic(err)
-		}
-		addr := "127.0.0.1:8888"
-		h := server.Default(
-			server.WithHostPorts(addr),
-			server.WithRegistry(r, &registry.Info{
-				ServiceName: "hertz.test.demo",
-				Addr:        utils.NewNetAddr("tcp", addr),
-				Weight:      10,
-				Tags:        nil,
-			}))
-		h.GET("/ping", func(_ context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong2"})
-		})
-		h.Spin()
-	}()
-	wg.Wait()
+	r, err := etcd.NewEtcdRegistry(cli, time.Second*2)
+	if err != nil {
+		panic(err)
+	}
+	addr := "127.0.0.1:8888"
+	h := server.Default(
+		server.WithHostPorts(addr),
+		server.WithRegistry(r, &registry.Info{
+			ServiceName: "hertz.test.demo",
+			Addr:        utils.NewNetAddr("tcp", addr),
+			Weight:      10,
+			Tags:        nil,
+		}))
+	h.GET("/ping", func(_ context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong2"})
+	})
+	h.Spin()
 }

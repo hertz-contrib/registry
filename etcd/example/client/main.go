@@ -33,7 +33,7 @@ var wg sync.WaitGroup
 func main() {
 
 	etcdCli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2879"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 		DialTimeout: 2 * time.Second,
 	})
 	if err != nil {

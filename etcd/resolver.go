@@ -27,13 +27,14 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
+var _ discovery.Resolver = (*etcdResolver)(nil)
+
 type etcdResolver struct {
 	client  *clientv3.Client
 	timeout time.Duration
 }
 
 func NewEtcdResolver(cli *clientv3.Client, sessionTimeout time.Duration) (discovery.Resolver, error) {
-	
 	return &etcdResolver{cli, sessionTimeout}, nil
 }
 
@@ -55,18 +56,17 @@ func (e *etcdResolver) Resolve(ctx context.Context, desc string) (discovery.Resu
 }
 
 func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
-	// get
 	instances := make([]discovery.Instance, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	// use the etcd get method with the prefix
-	resp, err := e.client.Get(ctx, desc, clientv3.WithPrefix())
+	resp, err := e.client.Get(ctx, desc+Separator, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Printf("get from etcd failed, err:%v\n", err)
 		return nil, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, errors.New("not found path")
+		return instances, nil
 	}
 	for _, ev := range resp.Kvs {
 		fmt.Printf("%s:%s\n", ev.Key, ev.Value)
@@ -89,7 +89,9 @@ func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
 		}
 		en := new(RegistryEntity)
 
-		json.Unmarshal(value, en)
+		if err := json.Unmarshal(value, en); err != nil {
+			return nil, err
+		}
 
 		instances = append(instances, discovery.NewInstance("tcp", ep, en.Weight, en.Tags))
 	}

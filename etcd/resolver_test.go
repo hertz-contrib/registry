@@ -1,3 +1,17 @@
+// Copyright 2021 CloudWeGo Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package etcd
 
 import (
@@ -32,10 +46,6 @@ func init() {
 		panic(err)
 	}
 	resover = r
-}
-
-func TestGetInstances(t *testing.T) {
-
 }
 
 func TestResolve(t *testing.T) {
@@ -103,23 +113,34 @@ func TestResolve(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			etcdCli.Put(ctx, path, string(content))
+			_, err = etcdCli.Put(ctx, path, string(content))
+			if err != nil {
+				t.Errorf("path put error")
+			}
 			cancel()
 		}
 		res, err := resover.Resolve(context.Background(), tes.info.ServiceName)
 		if err != nil {
+
 			assert.False(t, tes.wantErr)
+
 			continue
 		}
+
 		assert.Equal(t, res.CacheKey, tes.info.ServiceName)
+
 		for i, ins := range res.Instances {
 			args := tes.info.args[i]
+
 			assert.Equal(t, args.Addr, ins.Address().String())
 			assert.Equal(t, args.Weight, ins.Weight())
+
 			for key, val1 := range args.Tags {
 				val2, exist := ins.Tag(key)
+
 				assert.True(t, exist)
 				assert.Equal(t, val1, val2)
+
 			}
 		}
 	}

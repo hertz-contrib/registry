@@ -17,15 +17,17 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"go.etcd.io/etcd/clientv3"
 )
+
+var _ registry.Registry = (*etcdRegistry)(nil)
 
 const (
 	Separator = "/"
@@ -64,57 +66,25 @@ func (e etcdRegistry) Deregister(info *registry.Info) error {
 	return e.delNode(path)
 }
 
-//  buildPath build from registry.Info
-//  /{serviceName}/{ip}:{port}
+// buildPath path format as follows: {serviceName}/{ip}:{port}
 func buildPath(info *registry.Info) (string, error) {
 	var path string
-	if info == nil {
-		return "", fmt.Errorf("registry info can't be nil")
-	}
-	if info.ServiceName == "" {
-		return "", fmt.Errorf("registry info service name can't be empty")
-	}
-	if info.Addr == nil {
-		return "", fmt.Errorf("registry info addr can't be nil")
-	}
 	if !strings.HasPrefix(info.ServiceName, Separator) {
 		path = Separator + info.ServiceName
 	}
-
-	if host, port, err := net.SplitHostPort(info.Addr.String()); err == nil {
-		if port == "" {
-			return "", fmt.Errorf("registry info addr missing port")
-		}
-		if host == "" {
-			ipv4, err := getLocalIpv4Host()
-			if err != nil {
-				return "", fmt.Errorf("get local ipv4 error, cause %w", err)
-			}
-			path = path + Separator + ipv4 + ":" + port
-		} else {
-			path = path + Separator + host + ":" + port
-		}
-	} else {
+	host, port, err := net.SplitHostPort(info.Addr.String())
+	if err != nil {
 		return "", fmt.Errorf("parse registry info addr error")
 	}
-	return path, nil
-}
+	if port == "" {
+		return "", fmt.Errorf("registry info addr missing port")
+	}
+	if host == "" || host == "::" {
+		host = utils.LocalIP()
+	}
+	path = path + Separator + net.JoinHostPort(host, port)
 
-func getLocalIpv4Host() (string, error) {
-	addr, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", err
-	}
-	for _, addr := range addr {
-		ipNet, isIpNet := addr.(*net.IPNet)
-		if isIpNet && !ipNet.IP.IsLoopback() {
-			ipv4 := ipNet.IP.To4()
-			if ipv4 != nil {
-				return ipv4.String(), nil
-			}
-		}
-	}
-	return "", errors.New("not found ipv4 address")
+	return path, nil
 }
 
 func (e *etcdRegistry) addNode(path string, content string) error {
@@ -122,8 +92,7 @@ func (e *etcdRegistry) addNode(path string, content string) error {
 	_, err := e.client.Put(ctx, path, content)
 	cancel()
 	if err != nil {
-		fmt.Printf("put to etcd failed, err:%v\n", err)
-		return err
+		return fmt.Errorf("create node [%s] error, cause %w", path, err)
 	}
 	return nil
 }
@@ -133,8 +102,7 @@ func (e *etcdRegistry) delNode(path string) error {
 	_, err := e.client.Delete(ctx, path)
 	cancel()
 	if err != nil {
-		fmt.Printf("get from etcd failed, err:%v\n", err)
-		return err
+		return fmt.Errorf("delete node [%s] error, cause %w", path, err)
 	}
 	return nil
 }

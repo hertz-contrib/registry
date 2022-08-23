@@ -24,8 +24,6 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/go-zookeeper/zk"
-	"github.com/hertz-contrib/registry/zookeeper/entity"
-	"github.com/hertz-contrib/registry/zookeeper/utils"
 )
 
 type zookeeperResolver struct {
@@ -48,7 +46,7 @@ func NewZookeeperResolverWithAuth(servers []string, sessionTimeout time.Duration
 		return nil, err
 	}
 	auth := []byte(fmt.Sprintf("%s:%s", user, password))
-	err = conn.AddAuth(utils.Scheme, auth)
+	err = conn.AddAuth(Scheme, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +59,8 @@ func (z *zookeeperResolver) Target(ctx context.Context, target *discovery.Target
 
 func (z *zookeeperResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
 	path := desc
-	if !strings.HasPrefix(path, utils.Separator) {
-		path = utils.Separator + path
+	if !strings.HasPrefix(path, Separator) {
+		path = Separator + path
 	}
 	eps, err := z.getEndPoints(path)
 	if err != nil {
@@ -110,11 +108,11 @@ func (z *zookeeperResolver) getInstances(eps []string, path string) ([]discovery
 }
 
 func (z *zookeeperResolver) detailEndPoints(path, ep string) (discovery.Instance, error) {
-	data, _, err := z.conn.Get(path + utils.Separator + ep)
+	data, _, err := z.conn.Get(path + Separator + ep)
 	if err != nil {
 		return nil, err
 	}
-	en := new(entity.RegistryEntity)
+	en := new(RegistryEntity)
 	err = json.Unmarshal(data, en)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal data [%s] error, cause %w", data, err)

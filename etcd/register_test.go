@@ -1,3 +1,17 @@
+// Copyright 2021 CloudWeGo Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package etcd
 
 import (
@@ -5,9 +19,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cloudwego/hertz/pkg/common/utils"
-
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +42,7 @@ func TestRegister(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			// set single info
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo1",
@@ -40,17 +54,18 @@ func TestRegister(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// set multi infos
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo2",
 					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8000"),
-					Weight:      10,
+					Weight:      15,
 					Tags:        nil,
 				},
 				{
 					ServiceName: "hertz.test.demo2",
 					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8001"),
-					Weight:      10,
+					Weight:      20,
 					Tags:        nil,
 				},
 			},
@@ -59,7 +74,7 @@ func TestRegister(t *testing.T) {
 	}
 	for _, tes := range tests {
 		r, err := NewEtcdRegistry(etcdCli, timeout)
-		assert.False(t,err != nil)
+		assert.False(t, err != nil)
 		for _, info := range tes.info {
 			r.Register(info)
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)

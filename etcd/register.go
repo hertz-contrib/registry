@@ -27,6 +27,8 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
+var _ registry.Registry = (*etcdRegistry)(nil)
+
 const (
 	Separator = "/"
 )

@@ -27,13 +27,15 @@ import (
 	"go.etcd.io/etcd/clientv3"
 )
 
+var _ discovery.Resolver = (*etcdResolver)(nil)
+
 type etcdResolver struct {
 	client  *clientv3.Client
 	timeout time.Duration
 }
 
 func NewEtcdResolver(cli *clientv3.Client, sessionTimeout time.Duration) (discovery.Resolver, error) {
-	
+
 	return &etcdResolver{cli, sessionTimeout}, nil
 }
 
@@ -66,7 +68,7 @@ func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
 		return nil, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, errors.New("not found path")
+		return instances, nil
 	}
 	for _, ev := range resp.Kvs {
 		fmt.Printf("%s:%s\n", ev.Key, ev.Value)

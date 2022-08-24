@@ -66,8 +66,7 @@ func (e etcdRegistry) Deregister(info *registry.Info) error {
 	return e.delNode(path)
 }
 
-//  buildPath build from registry.Info
-//  /{serviceName}/{ip}:{port}
+// buildPath path format as follows: {serviceName}/{ip}:{port}
 func buildPath(info *registry.Info) (string, error) {
 	var path string
 	if info == nil {

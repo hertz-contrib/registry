@@ -3,6 +3,7 @@ REGISTRY=quay.io/coreos/etcd
 ETCD_VERSION=latest
 # run cluster
 prepare-cluster:
+	cd example
 	docker-compose up -d
 
 # run single node in docker 

@@ -6,6 +6,10 @@ jobs:
   ut:
     runs-on: ubuntu-latest
     services:
+      zookeeper:
+        image: 'zookeeper:3.7.0'
+        ports:
+          - '2181:2181'
       etcd:
         image: bitnami/etcd:latest
         ports:                    

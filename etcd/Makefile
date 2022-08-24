@@ -1,5 +1,5 @@
 NODE1=172.18.31.33
-REGISTRY=quay.io/coreos/etcd
+REGISTRY=bitnami/etcd
 ETCD_VERSION=latest
 # run cluster
 prepare-cluster:
@@ -9,12 +9,11 @@ prepare-cluster:
 # run single node in docker 
 prepare:
 	docker pull ${REGISTRY}:${ETCD_VERSION}
-	docker run \
-  	-p 2379:2379 \
-  	-p 2380:2380 \
-  	--name etcd ${REGISTRY}:${ETCD_VERSION} \
-  	/usr/local/bin/etcd \
-  	--data-dir=/etcd-data --name node1 \
-  	--initial-advertise-peer-urls http://${NODE1}:2380 --listen-peer-urls http://0.0.0.0:2380 \
-  	--advertise-client-urls http://${NODE1}:2379 --listen-client-urls http://0.0.0.0:2379 \
-  	--initial-cluster node1=http://${NODE1}:2380
+	docker network create app-tier --driver bridge
+	docker run -d --name Etcd-server \
+    --network app-tier \
+    --publish 2379:2379 \
+    --publish 2380:2380 \
+    --env ALLOW_NONE_AUTHENTICATION=yes \
+    --env ETCD_ADVERTISE_CLIENT_URLS=http://etcd-server:2379 \
+    bitnami/etcd:latest

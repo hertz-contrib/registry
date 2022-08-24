@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       zookeeper:
-        image: 'quay.io/coreos/etcd:last'
+        image: 'bitnami/etcd:last'
         ports:
           - '2379:2379'
     steps:

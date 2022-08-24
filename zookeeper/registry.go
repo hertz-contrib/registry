@@ -113,20 +113,18 @@ func buildPath(info *registry.Info) (string, error) {
 	if !strings.HasPrefix(info.ServiceName, Separator) {
 		path = Separator + info.ServiceName
 	}
-
-	if host, port, err := net.SplitHostPort(info.Addr.String()); err == nil {
-		if port == "" {
-			return "", fmt.Errorf("registry info addr missing port")
-		}
-		if host == "" || host == "::" {
-			host = utils.LocalIP()
-			path = path + Separator + "[" + host + "]" + ":" + port
-		} else {
-			path = path + Separator + host + ":" + port
-		}
-	} else {
+	host, port, err := net.SplitHostPort(info.Addr.String())
+	if err != nil {
 		return "", fmt.Errorf("parse registry info addr error")
 	}
+	if port == "" {
+		return "", fmt.Errorf("registry info addr missing port")
+	}
+	if host == "" || host == "::" {
+		host = utils.LocalIP()
+	}
+	path = path + Separator + net.JoinHostPort(host, port)
+
 	return path, nil
 }
 

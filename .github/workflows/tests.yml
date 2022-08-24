@@ -6,8 +6,8 @@ jobs:
   ut:
     runs-on: ubuntu-latest
     services:
-      zookeeper:
-        image: 'bitnami/etcd:last'
+      etcd:
+        image: 'bitnami/etcd:3.5.0'
         ports:
           - '2379:2379'
     steps:

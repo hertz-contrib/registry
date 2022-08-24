@@ -76,7 +76,10 @@ func TestRegister(t *testing.T) {
 		r, err := NewEtcdRegistry(etcdCli, timeout)
 		assert.False(t, err != nil)
 		for _, info := range tes.info {
-			r.Register(info)
+			if err := r.Register(info); err != nil {
+				t.Errorf("info register err")
+			}
+
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			path, err := buildPath(info)
 
@@ -90,7 +93,9 @@ func TestRegister(t *testing.T) {
 
 			val := kv.Kvs[0].Value
 			en := new(RegistryEntity)
-			json.Unmarshal(val, en)
+			if err := json.Unmarshal(val, en); err != nil {
+				t.Errorf("json unmarshal error")
+			}
 
 			assert.Equal(t, en.Tags, info.Tags)
 			assert.Equal(t, en.Weight, info.Weight)

@@ -35,7 +35,6 @@ type etcdResolver struct {
 }
 
 func NewEtcdResolver(cli *clientv3.Client, sessionTimeout time.Duration) (discovery.Resolver, error) {
-
 	return &etcdResolver{cli, sessionTimeout}, nil
 }
 
@@ -61,7 +60,7 @@ func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
 	instances := make([]discovery.Instance, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	// use the etcd get method with the prefix
-	resp, err := e.client.Get(ctx, desc + Separator, clientv3.WithPrefix())
+	resp, err := e.client.Get(ctx, desc+Separator, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Printf("get from etcd failed, err:%v\n", err)
@@ -91,7 +90,9 @@ func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
 		}
 		en := new(RegistryEntity)
 
-		json.Unmarshal(value, en)
+		if err := json.Unmarshal(value, en); err != nil {
+			return nil, err
+		}
 
 		instances = append(instances, discovery.NewInstance("tcp", ep, en.Weight, en.Tags))
 	}

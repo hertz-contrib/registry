@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/client"
@@ -28,10 +27,7 @@ import (
 	"github.com/hertz-contrib/registry/etcd"
 )
 
-var wg sync.WaitGroup
-
 func main() {
-
 	etcdCli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"127.0.0.1:2379"},
 		DialTimeout: 2 * time.Second,

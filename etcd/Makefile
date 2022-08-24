@@ -7,7 +7,8 @@ prepare-cluster:
 
 # run single node in docker 
 prepare:
-	docker run -d \
+	docker pull ${REGISTRY}:${ETCD_VERSION}
+	docker run \
   	-p 2379:2379 \
   	-p 2380:2380 \
   	--name etcd ${REGISTRY}:${ETCD_VERSION} \

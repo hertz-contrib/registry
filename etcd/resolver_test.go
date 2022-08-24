@@ -49,7 +49,6 @@ func init() {
 }
 
 func TestGetInstances(t *testing.T) {
-
 }
 
 func TestResolve(t *testing.T) {
@@ -117,7 +116,10 @@ func TestResolve(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			etcdCli.Put(ctx, path, string(content))
+			_, err = etcdCli.Put(ctx, path, string(content))
+			if err != nil {
+				t.Errorf("path put error")
+			}
 			cancel()
 		}
 		res, err := resover.Resolve(context.Background(), tes.info.ServiceName)

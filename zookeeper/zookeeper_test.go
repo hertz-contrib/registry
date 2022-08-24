@@ -70,7 +70,7 @@ func TestZookeeperRegistryAndDeregister(t *testing.T) {
 	assert.Equal(t, opt.RegistryInfo.ServiceName, "hertz.test.demo")
 	assert.Nil(t, opt.RegistryInfo.Tags)
 
-	h.Shutdown(context.Background())
+	_ = h.Shutdown(context.Background())
 	time.Sleep(5 * time.Second)
 
 	status1, body1, err1 := newClient.Get(context.Background(), nil, addr, config.WithSD(true))

@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"strings"
 	"time"
 
@@ -88,21 +87,11 @@ func (z *zookeeperResolver) getEndPoints(path string) ([]string, error) {
 func (z *zookeeperResolver) getInstances(eps []string, path string) ([]discovery.Instance, error) {
 	instances := make([]discovery.Instance, 0, len(eps))
 	for _, ep := range eps {
-		if host, port, err := net.SplitHostPort(ep); err == nil {
-			if port == "" {
-				return []discovery.Instance{}, fmt.Errorf("missing port when parse node [%s]", ep)
-			}
-			if host == "" || host == "::" {
-				return []discovery.Instance{}, fmt.Errorf("missing host when parse node [%s]", ep)
-			}
-			ins, err := z.detailEndPoints(path, ep)
-			if err != nil {
-				return []discovery.Instance{}, fmt.Errorf("detail endpoint [%s] info error, cause %w", ep, err)
-			}
-			instances = append(instances, ins)
-		} else {
-			return []discovery.Instance{}, fmt.Errorf("parse node [%s] error, details info [%w]", ep, err)
+		ins, err := z.detailEndPoints(path, ep)
+		if err != nil {
+			return []discovery.Instance{}, fmt.Errorf("detail endpoint [%s] info error, cause %w", ep, err)
 		}
+		instances = append(instances, ins)
 	}
 	return instances, nil
 }

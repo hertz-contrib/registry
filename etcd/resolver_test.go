@@ -48,7 +48,6 @@ func init() {
 	resover = r
 }
 
-
 func TestResolve(t *testing.T) {
 	type args struct {
 		Addr   string

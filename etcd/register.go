@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"go.etcd.io/etcd/clientv3"
 )
 

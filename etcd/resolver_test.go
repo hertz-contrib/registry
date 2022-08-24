@@ -48,8 +48,6 @@ func init() {
 	resover = r
 }
 
-func TestGetInstances(t *testing.T) {
-}
 
 func TestResolve(t *testing.T) {
 	type args struct {

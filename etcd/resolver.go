@@ -56,7 +56,6 @@ func (e *etcdResolver) Resolve(ctx context.Context, desc string) (discovery.Resu
 }
 
 func (e *etcdResolver) getInstances(desc string) ([]discovery.Instance, error) {
-	// get
 	instances := make([]discovery.Instance, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	// use the etcd get method with the prefix

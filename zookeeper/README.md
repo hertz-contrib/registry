@@ -2,9 +2,9 @@
 
 Zookeeper as service discovery for Hertz.
 
-## how to use?
+## How to use?
 
-### server 
+### Server 
 
 **[example/standard/server/main.go](example/standard/server/main.go)**
 
@@ -74,19 +74,19 @@ func main() {
 ```
 ## How to run example?
 
-### run docker
+### Run docker
 
 ```shell
 make prepare
 ```
 
-### run server
+### Run server
 
 ```go
 go run ./example/standard/server/main.go
 ```
 
-### run client
+### Run client
 
 ```go
 go run ./example/standard/client/main.go

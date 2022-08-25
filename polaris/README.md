@@ -130,4 +130,4 @@ go run example/client/main.go
 
 ## Compatibility
 
-Compatible with polaris.
+Compatible with polaris (v1.4.0 - v1.10.0), latest stable version is recommended. If you want to use other server version, please modify the version in `Makefile` to test.

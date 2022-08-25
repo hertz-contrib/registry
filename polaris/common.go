@@ -75,7 +75,7 @@ func ChangePolarisInstanceToHertz(PolarisInstance model.Instance) discovery.Inst
 	}
 
 	HertzInstance := discovery.NewInstance(PolarisInstance.GetProtocol(), addr, weight, tags)
-	// In HertzInstance , tags can be used as IDC、Cluster、Env 、namespace、and so on.
+	// In HertzInstance, tags can be used as IDC、Cluster、Env、namespace、and so on.
 	return HertzInstance
 }
 
@@ -88,7 +88,7 @@ func GetInfoHostAndPort(Addr string) (string, int, error) {
 	if port == "" {
 		return infoHost, 0, fmt.Errorf("registry info addr missing port")
 	}
-	if infoHost == "" {
+	if infoHost == "" || infoHost == "::" {
 		infoHost = utils.LocalIP()
 		if infoHost == utils.UNKNOWN_IP_ADDR {
 			return "", 0, fmt.Errorf("get local ip error")
@@ -101,7 +101,7 @@ func GetInfoHostAndPort(Addr string) (string, int, error) {
 	return infoHost, infoPort, nil
 }
 
-// GetInstanceKey generates instanceKey  for one instance.
+// GetInstanceKey generates instanceKey for one instance.
 func GetInstanceKey(namespace, serviceName, host, port string) string {
 	var instanceKey strings.Builder
 	instanceKey.WriteString(namespace)

@@ -114,7 +114,7 @@ func NewSCRegistry(client *sc.Client, opts ...RegistryOption) registry.Registry 
 
 // Register a service info to ServiceComb
 func (scr *serviceCombRegistry) Register(info *registry.Info) error {
-	err := scr.vaildRegistInfo(info)
+	err := scr.vaildRegistryInfo(info)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (scr *serviceCombRegistry) Register(info *registry.Info) error {
 
 // Deregister a service or an instance
 func (scr *serviceCombRegistry) Deregister(info *registry.Info) error {
-	err := scr.vaildRegistInfo(info)
+	err := scr.vaildRegistryInfo(info)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func (scr *serviceCombRegistry) heartBeat(ctx context.Context, serviceId, instan
 	}
 }
 
-func (scr *serviceCombRegistry) vaildRegistInfo(info *registry.Info) error {
+func (scr *serviceCombRegistry) vaildRegistryInfo(info *registry.Info) error {
 	if info == nil {
 		return errors.New("registry.Info can not be empty")
 	}

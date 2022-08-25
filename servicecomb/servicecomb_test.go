@@ -141,7 +141,3 @@ func TestServiceCombDiscovery(t *testing.T) {
 	assert.Empty(t, result.Instances)
 	assert.Equal(t, serviceName, result.CacheKey)
 }
-
-func TestParseAddr(t *testing.T) {
-
-}

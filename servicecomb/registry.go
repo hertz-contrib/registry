@@ -238,7 +238,7 @@ func (scr *serviceCombRegistry) heartBeat(ctx context.Context, serviceId, instan
 		case <-ticker.C:
 			success, err := scr.cli.Heartbeat(serviceId, instanceId)
 			if err != nil || !success {
-				hlog.CtxErrorf(ctx, "beat to ServerComb return error:%+v instance:%v", err, instanceId)
+				hlog.CtxErrorf(ctx, "HERTZ: beat to ServerComb return error:%+v instance:%v", err, instanceId)
 				ticker.Stop()
 				return
 			}

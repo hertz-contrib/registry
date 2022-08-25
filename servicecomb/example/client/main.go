@@ -21,14 +21,14 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/servicecomb/resolver"
+	"github.com/hertz-contrib/servicecomb"
 )
 
 const scAddr = "127.0.0.1:30100"
 
 func main() {
 	// build a servicecomb resolver
-	r, err := resolver.NewDefaultSCResolver([]string{scAddr})
+	r, err := servicecomb.NewDefaultSCResolver([]string{scAddr})
 	if err != nil {
 		panic(err)
 	}

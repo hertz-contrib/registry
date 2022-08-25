@@ -29,8 +29,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	scRegistry "github.com/hertz-contrib/servicecomb/registry"
-	"github.com/hertz-contrib/servicecomb/resolver"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,7 +38,7 @@ const scAddr = "127.0.0.1:30100"
 func TestServiceCombRegistryWithHertz(t *testing.T) {
 	addr := "127.0.0.1:8710"
 	serviceName := "hertz.servicecomb.test"
-	r, err := scRegistry.NewDefaultSCRegistry([]string{scAddr})
+	r, err := NewDefaultSCRegistry([]string{scAddr})
 	assert.Nil(t, err)
 	h := server.Default(
 		server.WithHostPorts(addr),
@@ -60,7 +58,7 @@ func TestServiceCombRegistryWithHertz(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	scResolver, err := resolver.NewDefaultSCResolver([]string{scAddr})
+	scResolver, err := NewDefaultSCResolver([]string{scAddr})
 	assert.Nil(t, err)
 
 	cli, err := client.NewClient()
@@ -92,7 +90,7 @@ func TestServiceCombRegistryWithHertz(t *testing.T) {
 // TestServiceCombDiscovery Test servicecomb registry and deregistry.
 func TestServiceCombDiscovery(t *testing.T) {
 	// register
-	r, err := scRegistry.NewDefaultSCRegistry([]string{scAddr})
+	r, err := NewDefaultSCRegistry([]string{scAddr})
 	assert.Nil(t, err)
 	serviceName := "discovery.test"
 	tags := map[string]string{"group": "blue", "idc": "hd1"}
@@ -103,7 +101,7 @@ func TestServiceCombDiscovery(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	// resolve
-	res, err := resolver.NewDefaultSCResolver([]string{scAddr})
+	res, err := NewDefaultSCResolver([]string{scAddr})
 	assert.Nil(t, err)
 	target := res.Target(context.Background(), &discovery.TargetInfo{Host: serviceName, Tags: nil})
 	result, err := res.Resolve(context.Background(), target)
@@ -142,4 +140,8 @@ func TestServiceCombDiscovery(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Empty(t, result.Instances)
 	assert.Equal(t, serviceName, result.CacheKey)
+}
+
+func TestParseAddr(t *testing.T) {
+
 }

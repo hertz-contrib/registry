@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package registry
+package servicecomb
 
 import (
 	"context"
@@ -37,52 +37,53 @@ type scHeartbeat struct {
 	instanceKey string
 }
 
-type options struct {
+type registryOptions struct {
 	appId             string
 	versionRule       string
 	hostName          string
 	heartbeatInterval int32
 }
 
-// Option is ServiceComb option.
-type Option func(o *options)
+// RegistryOption is ServiceComb option.
+type RegistryOption func(o *registryOptions)
 
 // WithAppId with app id option
-func WithAppId(appId string) Option {
-	return func(o *options) {
+func WithAppId(appId string) RegistryOption {
+	return func(o *registryOptions) {
 		o.appId = appId
 	}
 }
 
-// WithVersionRule with version rule option
-func WithVersionRule(versionRule string) Option {
-	return func(o *options) {
+// WithRegistryVersionRule with version rule option
+func WithRegistryVersionRule(versionRule string) RegistryOption {
+	return func(o *registryOptions) {
 		o.versionRule = versionRule
 	}
 }
 
-// WithHostName with host name option
-func WithHostName(hostName string) Option {
-	return func(o *options) {
+// WithRegistryHostName with host name option
+func WithRegistryHostName(hostName string) RegistryOption {
+	return func(o *registryOptions) {
 		o.hostName = hostName
 	}
 }
 
-func WithHeartbeatInterval(second int32) Option {
-	return func(o *options) {
+// WithRegistryHeartbeatInterval with heart beat second
+func WithRegistryHeartbeatInterval(second int32) RegistryOption {
+	return func(o *registryOptions) {
 		o.heartbeatInterval = second
 	}
 }
 
 type serviceCombRegistry struct {
 	cli         *sc.Client
-	opts        options
+	opts        registryOptions
 	lock        *sync.RWMutex
 	registryIns map[string]*scHeartbeat
 }
 
 // NewDefaultSCRegistry create a new default ServiceComb registry
-func NewDefaultSCRegistry(endPoints []string, opts ...Option) (registry.Registry, error) {
+func NewDefaultSCRegistry(endPoints []string, opts ...RegistryOption) (registry.Registry, error) {
 	client, err := sc.NewClient(sc.Options{
 		Endpoints: endPoints,
 	})
@@ -93,8 +94,8 @@ func NewDefaultSCRegistry(endPoints []string, opts ...Option) (registry.Registry
 }
 
 // NewSCRegistry create a new ServiceComb registry
-func NewSCRegistry(client *sc.Client, opts ...Option) registry.Registry {
-	op := options{
+func NewSCRegistry(client *sc.Client, opts ...RegistryOption) registry.Registry {
+	op := registryOptions{
 		appId:             "DEFAULT",
 		versionRule:       "1.0.0",
 		hostName:          "DEFAULT",
@@ -121,7 +122,7 @@ func (scr *serviceCombRegistry) Register(info *registry.Info) error {
 	if err != nil {
 		return err
 	}
-	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
+	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, addr)
 	scr.lock.RLock()
 	_, ok := scr.registryIns[instanceKey]
 	scr.lock.RUnlock()
@@ -189,15 +190,8 @@ func (scr *serviceCombRegistry) Deregister(info *registry.Info) error {
 	if err != nil {
 		return fmt.Errorf("get service-id error: %w", err)
 	}
-	if info.Addr == nil {
-		_, err = scr.cli.UnregisterMicroService(serviceId)
-		if err != nil {
-			return fmt.Errorf("deregister service error: %w", err)
-		}
-		return nil
-	}
 
-	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
+	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, addr)
 	scr.lock.RLock()
 	insHeartbeat, ok := scr.registryIns[instanceKey]
 	scr.lock.RUnlock()

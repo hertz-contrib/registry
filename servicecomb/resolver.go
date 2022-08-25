@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resolver
+package servicecomb
 
 import (
 	"context"
@@ -23,36 +23,36 @@ import (
 
 var _ discovery.Resolver = (*serviceCombResolver)(nil)
 
-type options struct {
+type resolverOptions struct {
 	appId       string
 	versionRule string
 	consumerId  string
 }
 
-// Option is service-comb resolver option.
-type Option func(o *options)
+// ResolverOption is service-comb resolver option.
+type ResolverOption func(o *resolverOptions)
 
-// WithAppId with appId option.
-func WithAppId(appId string) Option {
-	return func(o *options) { o.appId = appId }
+// WithResolverAppId with appId option.
+func WithResolverAppId(appId string) ResolverOption {
+	return func(o *resolverOptions) { o.appId = appId }
 }
 
-// WithVersionRule with versionRule option.
-func WithVersionRule(versionRule string) Option {
-	return func(o *options) { o.versionRule = versionRule }
+// WithResolverVersionRule with versionRule option.
+func WithResolverVersionRule(versionRule string) ResolverOption {
+	return func(o *resolverOptions) { o.versionRule = versionRule }
 }
 
-// WithConsumerId with consumerId option.
-func WithConsumerId(consumerId string) Option {
-	return func(o *options) { o.consumerId = consumerId }
+// WithResolverConsumerId with consumerId option.
+func WithResolverConsumerId(consumerId string) ResolverOption {
+	return func(o *resolverOptions) { o.consumerId = consumerId }
 }
 
 type serviceCombResolver struct {
 	cli  *sc.Client
-	opts options
+	opts resolverOptions
 }
 
-func NewDefaultSCResolver(endPoints []string, opts ...Option) (discovery.Resolver, error) {
+func NewDefaultSCResolver(endPoints []string, opts ...ResolverOption) (discovery.Resolver, error) {
 	client, err := sc.NewClient(sc.Options{
 		Endpoints: endPoints,
 	})
@@ -63,8 +63,8 @@ func NewDefaultSCResolver(endPoints []string, opts ...Option) (discovery.Resolve
 	return NewSCResolver(client, opts...), nil
 }
 
-func NewSCResolver(cli *sc.Client, opts ...Option) discovery.Resolver {
-	op := options{
+func NewSCResolver(cli *sc.Client, opts ...ResolverOption) discovery.Resolver {
+	op := resolverOptions{
 		appId:       "DEFAULT",
 		versionRule: "latest",
 		consumerId:  "",

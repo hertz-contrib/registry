@@ -19,13 +19,13 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	scRegistry "github.com/hertz-contrib/servicecomb/registry"
+	"github.com/hertz-contrib/servicecomb"
 )
 
 func main() {
     const scAddr = "127.0.0.1:30100"
     const addr = "127.0.0.1:8701"
-    r, err := scRegistry.NewDefaultSCRegistry([]string{scAddr})
+    r, err := servicecomb.NewDefaultSCRegistry([]string{scAddr})
     if err != nil {
         log.Fatal(err)
         return
@@ -59,13 +59,13 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/servicecomb/resolver"
+	"github.com/hertz-contrib/servicecomb"
 )
 
 func main() {
     const scAddr = "127.0.0.1:30100"
 	// build a servicecomb resolver 
-	r, err := resolver.NewDefaultSCResolver([]string{scAddr})
+	r, err := servicecomb.NewDefaultSCResolver([]string{scAddr})
 	if err != nil {
 		panic(err)
 	}

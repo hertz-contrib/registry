@@ -27,7 +27,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-chassis/cari/discovery"
 	"github.com/go-chassis/sc-client"
-
 	"github.com/thoas/go-funk"
 )
 
@@ -114,23 +113,14 @@ func NewSCRegistry(client *sc.Client, opts ...Option) registry.Registry {
 
 // Register a service info to ServiceComb
 func (scr *serviceCombRegistry) Register(info *registry.Info) error {
-	if info == nil {
-		return errors.New("registry.Info can not be empty")
-	}
-	if info.ServiceName == "" {
-		return errors.New("registry.Info ServiceName can not be empty")
-	}
-	if info.Addr == nil {
-		return errors.New("registry.Info Addr can not be empty")
-	}
-	host, port, err := net.SplitHostPort(info.Addr.String())
+	err := scr.vaildRegistInfo(info)
 	if err != nil {
-		return fmt.Errorf("parse registry info addr error: %w", err)
+		return err
 	}
-	if host == "" || host == "::" {
-		host = utils.LocalIP()
+	addr, err := scr.parseAddr(info.Addr.String())
+	if err != nil {
+		return err
 	}
-
 	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
 	scr.lock.RLock()
 	_, ok := scr.registryIns[instanceKey]
@@ -160,7 +150,7 @@ func (scr *serviceCombRegistry) Register(info *registry.Info) error {
 
 	instanceId, err := scr.cli.RegisterMicroServiceInstance(&discovery.MicroServiceInstance{
 		ServiceId:   serviceID,
-		Endpoints:   []string{net.JoinHostPort(host, port)},
+		Endpoints:   []string{addr},
 		HostName:    scr.opts.hostName,
 		HealthCheck: healthCheck,
 		Status:      sc.MSInstanceUP,
@@ -185,6 +175,16 @@ func (scr *serviceCombRegistry) Register(info *registry.Info) error {
 
 // Deregister a service or an instance
 func (scr *serviceCombRegistry) Deregister(info *registry.Info) error {
+	err := scr.vaildRegistInfo(info)
+	if err != nil {
+		return err
+	}
+
+	addr, err := scr.parseAddr(info.Addr.String())
+	if err != nil {
+		return err
+	}
+
 	serviceId, err := scr.cli.GetMicroServiceID(scr.opts.appId, info.ServiceName, scr.opts.versionRule, "")
 	if err != nil {
 		return fmt.Errorf("get service-id error: %w", err)
@@ -194,53 +194,43 @@ func (scr *serviceCombRegistry) Deregister(info *registry.Info) error {
 		if err != nil {
 			return fmt.Errorf("deregister service error: %w", err)
 		}
-	} else {
-		instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
-		scr.lock.RLock()
-		insHeartbeat, ok := scr.registryIns[instanceKey]
-		scr.lock.RUnlock()
-		if !ok {
-			return fmt.Errorf("instance{%s} has not registered", instanceKey)
-		}
-
-		host, port, err := net.SplitHostPort(info.Addr.String())
-		if err != nil {
-			return fmt.Errorf("parse deregistry info addr error: %w", err)
-		}
-		if host == "" || host == "::" {
-			host = utils.LocalIP()
-		}
-
-		addr := net.JoinHostPort(host, port)
-
-		instanceId := ""
-		instances, err := scr.cli.FindMicroServiceInstances("", scr.opts.appId, info.ServiceName, scr.opts.versionRule, sc.WithoutRevision())
-		if err != nil {
-			return fmt.Errorf("get instances error: %w", err)
-		}
-		for _, instance := range instances {
-			if funk.ContainsString(instance.Endpoints, addr) {
-				instanceId = instance.InstanceId
-			}
-		}
-		if instanceId != "" {
-			// unregister is to slow to effect, mark it down first.
-			_, err = scr.cli.UpdateMicroServiceInstanceStatus(serviceId, instanceId, sc.MSIinstanceDown)
-			if err != nil {
-				return fmt.Errorf("down service error: %w", err)
-			}
-			_, err = scr.cli.UnregisterMicroServiceInstance(serviceId, instanceId)
-			if err != nil {
-				return fmt.Errorf("deregister service error: %w", err)
-			}
-		}
-
-		scr.lock.Lock()
-		insHeartbeat.cancel()
-		delete(scr.registryIns, instanceKey)
-		scr.lock.Unlock()
+		return nil
 	}
 
+	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
+	scr.lock.RLock()
+	insHeartbeat, ok := scr.registryIns[instanceKey]
+	scr.lock.RUnlock()
+	if !ok {
+		return fmt.Errorf("instance{%s} has not registered", instanceKey)
+	}
+
+	instanceId := ""
+	instances, err := scr.cli.FindMicroServiceInstances("", scr.opts.appId, info.ServiceName, scr.opts.versionRule, sc.WithoutRevision())
+	if err != nil {
+		return fmt.Errorf("get instances error: %w", err)
+	}
+	for _, instance := range instances {
+		if funk.ContainsString(instance.Endpoints, addr) {
+			instanceId = instance.InstanceId
+		}
+	}
+	if instanceId != "" {
+		// unregister is to slow to effect, mark it down first.
+		_, err = scr.cli.UpdateMicroServiceInstanceStatus(serviceId, instanceId, sc.MSIinstanceDown)
+		if err != nil {
+			return fmt.Errorf("down service error: %w", err)
+		}
+		_, err = scr.cli.UnregisterMicroServiceInstance(serviceId, instanceId)
+		if err != nil {
+			return fmt.Errorf("deregister service error: %w", err)
+		}
+	}
+
+	scr.lock.Lock()
+	insHeartbeat.cancel()
+	delete(scr.registryIns, instanceKey)
+	scr.lock.Unlock()
 	return nil
 }
 
@@ -260,4 +250,29 @@ func (scr *serviceCombRegistry) heartBeat(ctx context.Context, serviceId, instan
 			}
 		}
 	}
+}
+
+func (scr *serviceCombRegistry) vaildRegistInfo(info *registry.Info) error {
+	if info == nil {
+		return errors.New("registry.Info can not be empty")
+	}
+	if info.ServiceName == "" {
+		return errors.New("registry.Info ServiceName can not be empty")
+	}
+	if info.Addr == nil {
+		return errors.New("registry.Info Addr can not be empty")
+	}
+	return nil
+}
+
+func (scr *serviceCombRegistry) parseAddr(s string) (string, error) {
+	host, port, err := net.SplitHostPort(s)
+	if err != nil {
+		return "", fmt.Errorf("parse deregistry info addr error: %w", err)
+	}
+	if host == "" || host == "::" {
+		host = utils.LocalIP()
+	}
+
+	return net.JoinHostPort(host, port), nil
 }

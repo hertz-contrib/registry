@@ -88,12 +88,12 @@ func main() {
 
 ## Example
 
-Server：`example/server/main.go`
+[Server](./example/server/main.go)
 
-Client：`example/client/main.go`
+[Client](./example/client/main.go)
 
 ## Compatibility
 
-Compatible with consul.
+Compatible with servicecomb.
 
 maintained by: [a631807682](https://github.com/a631807682)

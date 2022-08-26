@@ -88,12 +88,43 @@ func main() {
 
 ## Example
 
+### Run Server
 [Server](./example/server/main.go)
+```shell
+go run ./example/server/main.go
+```
+```log
+2022/08/26 17:23:27 INFO: Use Service center v4
+2022/08/26 17:23:27 INFO: Use Service center v4
+2022/08/26 17:23:27.310498 engine.go:537: [Debug] HERTZ: Method=GET    absolutePath=/ping                     --> handlerName=main.main.func2.1 (num=2 handlers)
+2022/08/26 17:23:27.310601 engine.go:537: [Debug] HERTZ: Method=GET    absolutePath=/ping                     --> handlerName=main.main.func1.1 (num=2 handlers)
+2022/08/26 17:23:27.311129 transport.go:91: [Info] HERTZ: HTTP server listening on address=127.0.0.1:8701
+2022/08/26 17:23:27.311447 transport.go:91: [Info] HERTZ: HTTP server listening on address=127.0.0.1:8702
+```
 
+### Run Client
 [Client](./example/client/main.go)
+```shell
+go run ./example/client/main.go
+```
+```log
+2022/08/26 17:24:03 INFO: Use Service center v4
+2022/08/26 17:24:03 DEBUG: service center has new revision 9fc77257754eca927c1ff189b083e6c4eb79dbff
+2022/08/26 17:24:03.413487 main.go:46: [Info] code=200,body={"ping":"pong1"}
+2022/08/26 17:24:03.414199 main.go:46: [Info] code=200,body={"ping":"pong2"}
+2022/08/26 17:24:03.414373 main.go:46: [Info] code=200,body={"ping":"pong1"}
+2022/08/26 17:24:03.414594 main.go:46: [Info] code=200,body={"ping":"pong2"}
+2022/08/26 17:24:03.414848 main.go:46: [Info] code=200,body={"ping":"pong2"}
+2022/08/26 17:24:03.415051 main.go:46: [Info] code=200,body={"ping":"pong1"}
+2022/08/26 17:24:03.415261 main.go:46: [Info] code=200,body={"ping":"pong2"}
+2022/08/26 17:24:03.415560 main.go:46: [Info] code=200,body={"ping":"pong1"}
+2022/08/26 17:24:03.415801 main.go:46: [Info] code=200,body={"ping":"pong2"}
+2022/08/26 17:24:03.416111 main.go:46: [Info] code=200,body={"ping":"pong2"}
+```
+
 
 ## Compatibility
 
-Compatible with servicecomb.
+Compatible with server (2.0.0 - latest), If you want to use older server version, please modify the version in `Makefile` to test.
 
-maintained by: [a631807682](https://github.com/a631807682)
+maintained by: [Cr](https://github.com/a631807682)

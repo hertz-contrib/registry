@@ -16,7 +16,6 @@ package consul
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 
@@ -62,7 +61,7 @@ func (c *consulResolver) Resolve(ctx context.Context, desc string) (discovery.Re
 		return discovery.Result{}, err
 	}
 	if len(agentServiceList) == 0 {
-		return discovery.Result{}, errors.New("no service found")
+		return discovery.Result{CacheKey: desc}, nil
 	}
 	for _, i := range agentServiceList {
 		svc := i.Service

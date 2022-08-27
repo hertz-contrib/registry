@@ -16,27 +16,32 @@ package consul
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
-	"strconv"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
+	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
+	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/config"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	consulClient *consulapi.Client
-	cRegistry    registry.Registry
-	cResolver    discovery.Resolver
-	consulAddr   = "127.0.0.1:8500"
-	localIpAddr  = "127.0.0.1"
+	cRegistry   registry.Registry
+	cResolver   discovery.Resolver
+	consulAddr  = "127.0.0.1:8500"
+	localIpAddr = "127.0.0.1"
 )
 
 func init() {
@@ -57,15 +62,6 @@ func init() {
 		return
 	}
 	cResolver = NewConsulResolver(cli2)
-
-	config3 := consulapi.DefaultConfig()
-	config3.Address = consulAddr
-	cli3, err := consulapi.NewClient(config3)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	consulClient = cli3
 }
 
 // TestNewConsulRegister tests the NewConsulRegister function.
@@ -116,17 +112,25 @@ func TestNewConsulResolver(t *testing.T) {
 
 // TestNewConsulResolver tests unit test preparatory work.
 func TestConsulPrepared(t *testing.T) {
-	assert.NotNil(t, consulClient)
 	assert.NotNil(t, cRegistry)
 	assert.NotNil(t, cResolver)
 	assert.NotEmpty(t, localIpAddr)
 }
 
-// TestRegister tests the Register function.
-func TestRegister(t *testing.T) {
+// TestConsulRegister tests the Register function with Hertz.
+func TestConsulRegister(t *testing.T) {
+	config := consulapi.DefaultConfig()
+	config.Address = consulAddr
+	consulClient, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
 	var (
-		testSvcName   = "demo.svc.local"
+		testSvcName   = "hertz.test.demo1"
 		testSvcPort   = fmt.Sprintf("%d", 8081)
+		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
 		testSvcWeight = 777
 		metaList      = map[string]string{
 			"k1": "vv1",
@@ -134,28 +138,28 @@ func TestRegister(t *testing.T) {
 			"k3": "vv3",
 		}
 	)
-	// listen on the port, and wait for the health check to connect
-	addr := net.JoinHostPort(localIpAddr, testSvcPort)
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%v", addr, err)
-		t.Fail()
-	}
-	defer func() {
-		if lis != nil {
-			lis.Close()
-		}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		r := NewConsulRegister(consulClient)
+		h := server.Default(
+			server.WithHostPorts(testSvcAddr),
+			server.WithRegistry(r, &registry.Info{
+				ServiceName: testSvcName,
+				Addr:        utils.NewNetAddr("tcp", testSvcAddr),
+				Weight:      testSvcWeight,
+				Tags:        metaList,
+			}),
+		)
+
+		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+		})
+		h.Spin()
 	}()
 
-	testSvcAddr := utils.NewNetAddr("tcp", addr)
-	registryInfo := &registry.Info{
-		ServiceName: testSvcName,
-		Weight:      testSvcWeight,
-		Addr:        testSvcAddr,
-		Tags:        metaList,
-	}
-	err = cRegistry.Register(registryInfo)
-	assert.Nil(t, err)
 	// wait for health check passing
 	time.Sleep(time.Second * 6)
 
@@ -165,7 +169,7 @@ func TestRegister(t *testing.T) {
 		ss := list[0]
 		gotSvc := ss.Service
 		assert.Equal(t, testSvcName, gotSvc.Service)
-		assert.Equal(t, testSvcAddr.String(), net.JoinHostPort(gotSvc.Address, fmt.Sprintf("%d", gotSvc.Port)))
+		assert.Equal(t, testSvcAddr, net.JoinHostPort(gotSvc.Address, fmt.Sprintf("%d", gotSvc.Port)))
 		assert.Equal(t, testSvcWeight, gotSvc.Weights.Passing)
 		assert.Equal(t, metaList, gotSvc.Meta)
 	}
@@ -173,181 +177,130 @@ func TestRegister(t *testing.T) {
 
 // TestConsulDiscovery tests the ConsulDiscovery function.
 func TestConsulDiscovery(t *testing.T) {
-	var (
-		testSvcName   = strconv.Itoa(int(time.Now().Unix())) + ".svc.local"
-		testSvcPort   = fmt.Sprintf("%d", 8082)
-		testSvcWeight = 777
-		ctx           = context.Background()
-	)
-	// listen on the port, and wait for the health check to connect
-	addr := net.JoinHostPort(localIpAddr, testSvcPort)
-	lis, err := net.Listen("tcp", addr)
+	consulConfig := consulapi.DefaultConfig()
+	consulConfig.Address = consulAddr
+	consulClient, err := consulapi.NewClient(consulConfig)
 	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%s", addr, err.Error())
-		t.Fail()
+		log.Fatal(err)
+		return
 	}
-	defer func() {
-		if lis != nil {
-			lis.Close()
+
+	var (
+		testSvcName   = "hertz.test.demo2"
+		testSvcPort   = fmt.Sprintf("%d", 8082)
+		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
+		testSvcWeight = 777
+		metaList      = map[string]string{
+			"k1": "vv1",
+			"k2": "vv2",
+			"k3": "vv3",
 		}
+	)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		r := NewConsulRegister(consulClient)
+		h := server.Default(
+			server.WithHostPorts(testSvcAddr),
+			server.WithRegistry(r, &registry.Info{
+				ServiceName: testSvcName,
+				Addr:        utils.NewNetAddr("tcp", testSvcAddr),
+				Weight:      testSvcWeight,
+				Tags:        metaList,
+			}),
+		)
+
+		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+		})
+		h.Spin()
 	}()
 
-	testSvcAddr := utils.NewNetAddr("tcp", addr)
-	info := &registry.Info{
-		ServiceName: testSvcName,
-		Weight:      testSvcWeight,
-		Addr:        testSvcAddr,
+	// wait for health check passing
+	time.Sleep(time.Second * 6)
+
+	// build a hertz client with the consul resolver
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
 	}
-	err = cRegistry.Register(info)
-	assert.Nil(t, err)
+	cli.Use(sd.Discovery(cResolver))
+	for i := 0; i < 10; i++ {
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
+		if err != nil {
+			hlog.Fatal(err)
+		}
+		hlog.Infof("code=%d,body=%s", status, string(body))
+	}
+}
+
+// TestConsulDeregister tests the Deregister function with Hertz
+func TestConsulDeregister(t *testing.T) {
+	consulConfig := consulapi.DefaultConfig()
+	consulConfig.Address = consulAddr
+	consulClient, err := consulapi.NewClient(consulConfig)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	var (
+		testSvcName   = "hertz.test.demo3"
+		testSvcPort   = fmt.Sprintf("%d", 8083)
+		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
+		testSvcWeight = 777
+		metaList      = map[string]string{
+			"k1": "vv1",
+			"k2": "vv2",
+			"k3": "vv3",
+		}
+		hertzServer  *server.Hertz
+		ctx          = context.Background()
+		registryInfo = &registry.Info{
+			ServiceName: testSvcName,
+			Addr:        utils.NewNetAddr("tcp", testSvcAddr),
+			Weight:      testSvcWeight,
+			Tags:        metaList,
+		}
+	)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		r := NewConsulRegister(consulClient)
+		hertzServer = server.Default(
+			server.WithHostPorts(testSvcAddr),
+			server.WithRegistry(r, registryInfo),
+		)
+
+		hertzServer.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+		})
+		hertzServer.Spin()
+	}()
+
 	// wait for health check passing
 	time.Sleep(time.Second * 6)
 
 	// resolve
-	result, err := cResolver.Resolve(ctx, testSvcName)
-	assert.Nil(t, err)
-	if assert.Equal(t, 1, len(result.Instances)) {
-		instance := result.Instances[0]
-		assert.Equal(t, testSvcWeight, instance.Weight())
-		assert.Equal(t, testSvcAddr.String(), instance.Address().String())
-	}
-}
-
-// TestDeregister tests the Deregister function.
-func TestDeregister(t *testing.T) {
-	var (
-		testSvcName   = strconv.Itoa(int(time.Now().Unix())) + ".svc.local"
-		testSvcPort   = fmt.Sprintf("%d", 8083)
-		testSvcWeight = 777
-		ctx           = context.Background()
-	)
-
-	// listen on the port, and wait for the health check to connect
-	addr := net.JoinHostPort(localIpAddr, testSvcPort)
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%s", addr, err.Error())
-		t.Fail()
-	}
-	defer func() {
-		if lis != nil {
-			lis.Close()
-		}
-	}()
-
-	testSvcAddr := utils.NewNetAddr("tcp", addr)
-	info := &registry.Info{
-		ServiceName: testSvcName,
-		Weight:      testSvcWeight,
-		Addr:        testSvcAddr,
-	}
-	err = cRegistry.Register(info)
-	assert.Nil(t, err)
-	time.Sleep(time.Second * 6)
-
-	// resolve
-	result, err := cResolver.Resolve(ctx, testSvcName)
+	result, err := cResolver.Resolve(context.Background(), testSvcName)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result.Instances))
 
-	// deregister
-	err = cRegistry.Deregister(info)
-	assert.Nil(t, err)
-	time.Sleep(time.Second)
+	err = hertzServer.Shutdown(ctx)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	// wait for hertz to deregister
+	time.Sleep(time.Second * 2)
 
 	// resolve again
 	result, err = cResolver.Resolve(ctx, testSvcName)
-	assert.NotNil(t, err)
-	assert.Equal(t, errors.New("no service found"), err)
-}
-
-// TestMultiInstancesRegister tests the Register function, register multiple instances, then deregister one of them.
-func TestMultiInstancesRegister(t *testing.T) {
-	var (
-		testSvcName = "svc.local"
-
-		testSvcPort1 = fmt.Sprintf("%d", 8091)
-		testSvcPort2 = fmt.Sprintf("%d", 8092)
-		testSvcPort3 = fmt.Sprintf("%d", 8093)
-	)
-
-	addr1 := net.JoinHostPort(localIpAddr, testSvcPort1)
-	lis1, err := net.Listen("tcp", addr1)
-	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%s", addr1, err.Error())
-		t.Fail()
-	}
-	defer func() {
-		if lis1 != nil {
-			lis1.Close()
-		}
-	}()
-	testSvcAddr := utils.NewNetAddr("tcp", addr1)
-	err = cRegistry.Register(&registry.Info{
-		ServiceName: testSvcName,
-		Weight:      11,
-		Addr:        testSvcAddr,
-	})
 	assert.Nil(t, err)
-
-	addr2 := net.JoinHostPort(localIpAddr, testSvcPort2)
-	lis2, err := net.Listen("tcp", addr2)
-	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%s", addr2, err.Error())
-		t.Fail()
-	}
-	defer func() {
-		if lis2 != nil {
-			lis2.Close()
-		}
-	}()
-	testSvcAddr2 := utils.NewNetAddr("tcp", addr2)
-	err = cRegistry.Register(&registry.Info{
-		ServiceName: testSvcName,
-		Weight:      22,
-		Addr:        testSvcAddr2,
-	})
-	assert.Nil(t, err)
-
-	addr3 := net.JoinHostPort(localIpAddr, testSvcPort3)
-	lis3, err := net.Listen("tcp", addr3)
-	if err != nil {
-		t.Errorf("listen tcp %s failed, err=%s", addr3, err.Error())
-		t.Fail()
-	}
-	defer func() {
-		if lis3 != nil {
-			lis3.Close()
-		}
-	}()
-	testSvcAddr3 := utils.NewNetAddr("tcp", addr3)
-	err = cRegistry.Register(&registry.Info{
-		ServiceName: testSvcName,
-		Weight:      33,
-		Addr:        testSvcAddr3,
-	})
-	assert.Nil(t, err)
-
-	time.Sleep(time.Second * 6)
-
-	svcList, _, err := consulClient.Health().Service(testSvcName, "", true, nil)
-	assert.Nil(t, err)
-	assert.Equal(t, 3, len(svcList))
-
-	err = cRegistry.Deregister(&registry.Info{
-		ServiceName: testSvcName,
-		Weight:      22,
-		Addr:        testSvcAddr2,
-	})
-	assert.Nil(t, err)
-	svcList, _, err = consulClient.Health().Service(testSvcName, "", true, nil)
-	assert.Nil(t, err)
-	if assert.Equal(t, 2, len(svcList)) {
-		for _, entry := range svcList {
-			gotSvc := entry.Service
-			assert.Equal(t, testSvcName, gotSvc.Service)
-			assert.Contains(t, []string{testSvcPort1, testSvcPort3}, fmt.Sprintf("%d", gotSvc.Port))
-			assert.Equal(t, localIpAddr, gotSvc.Address)
-		}
-	}
+	assert.Len(t, result.Instances, 0)
 }

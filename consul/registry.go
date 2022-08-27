@@ -94,6 +94,11 @@ func (c consulRegistry) Register(info *registry.Info) error {
 
 // Deregister deregister a service from consul.
 func (c consulRegistry) Deregister(info *registry.Info) error {
+	err := validateRegistryInfo(info)
+	if err != nil {
+		return fmt.Errorf("validating registry info failed, err: %w", err)
+	}
+
 	svcID, err := getServiceId(info)
 	if err != nil {
 		return err

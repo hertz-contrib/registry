@@ -7,10 +7,24 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      nacos:
+      consul:
         image: 'consul:latest'
         ports:
           - '8500:8500'
+      polaris:
+        image: polarismesh/polaris-server-standalone:v1.10.0
+        ports:
+          - 8091:8091
+      zookeeper:
+        image: 'zookeeper:3.7.0'
+        ports:
+          - '2181:2181'
+      nacos:
+        image: 'nacos/nacos-server:2.0.3'
+        ports:
+          - '8848:8848'
+        env:
+          MODE: standalone
 
     steps:
       - uses: actions/checkout@v3

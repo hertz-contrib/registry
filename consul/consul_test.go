@@ -228,7 +228,7 @@ func TestConsulDiscovery(t *testing.T) {
 	}
 	cli.Use(sd.Discovery(cResolver))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo2/ping", config.WithSD(true))
 		if err != nil {
 			hlog.Fatal(err)
 		}

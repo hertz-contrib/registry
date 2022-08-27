@@ -15,6 +15,13 @@ jobs:
         image: 'zookeeper:3.7.0'
         ports:
           - '2181:2181'
+      nacos:
+        image: 'nacos/nacos-server:2.0.3'
+        ports:
+          - '8848:8848'
+        env:
+          MODE: standalone
+
     steps:
       - uses: actions/checkout@v3
 

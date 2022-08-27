@@ -71,10 +71,6 @@ func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Resul
 		return discovery.Result{}, err
 	}
 
-	if len(res) == 0 {
-		return discovery.Result{}, nil
-	}
-
 	instances := make([]discovery.Instance, 0, len(res))
 	for _, in := range res {
 		if !in.Enable {

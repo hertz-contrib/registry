@@ -96,7 +96,7 @@ func (n *nacosRegistry) Register(info *registry.Info) error {
 	return nil
 }
 
-func (n nacosRegistry) validRegistryInfo(info *registry.Info) error {
+func (n *nacosRegistry) validRegistryInfo(info *registry.Info) error {
 	if info == nil {
 		return fmt.Errorf("registry.Info can not be empty")
 	}
@@ -124,7 +124,7 @@ func (n *nacosRegistry) Deregister(info *registry.Info) error {
 	if host == "" || host == "::" {
 		host = utils.LocalIP()
 	}
-	ok, err := n.client.DeregisterInstance(vo.DeregisterInstanceParam{
+	success, err := n.client.DeregisterInstance(vo.DeregisterInstanceParam{
 		Ip:          host,
 		Port:        uint64(portInt),
 		ServiceName: info.ServiceName,
@@ -132,7 +132,7 @@ func (n *nacosRegistry) Deregister(info *registry.Info) error {
 		Cluster:     n.opts.cluster,
 		Ephemeral:   true,
 	})
-	if ok {
+	if success {
 		hlog.Info("HERTZ: deregister instance success")
 	}
 	if err != nil {

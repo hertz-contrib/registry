@@ -29,7 +29,7 @@ type eurekaRegistry struct {
 }
 
 // NewEurekaRegistry creates a eureka registry.
-func NewEurekaRegistry(servers []string, heatBeatInterval time.Duration) registry.Registry {
+func NewEurekaRegistry(servers []string, heatBeatInterval time.Duration) *eurekaRegistry {
 	conn := fargo.NewConn(servers...)
 
 	return &eurekaRegistry{
@@ -139,7 +139,7 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 		return nil, err
 	}
 	if host == "" || host == "::" {
-		return nil, ErrMissIP
+		return nil, ErrMissingIP
 	}
 
 	port, err := strconv.ParseInt(portStr, 10, 64)
@@ -147,7 +147,7 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 		return nil, err
 	}
 	if port <= 0 {
-		return nil, ErrMissPort
+		return nil, ErrMissingPort
 	}
 
 	if info.Weight == 0 {

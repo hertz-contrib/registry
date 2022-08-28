@@ -1,4 +1,4 @@
-// Copyright 2021 CloudWeGo authors.
+// Copyright 2021 CloudWeGo Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ import "time"
 import (
 	"context"
 	"fmt"
+	"net"
+	"testing"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
@@ -28,14 +31,11 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"net"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEurekaRegistryAndDeRegistry(t *testing.T) {
-
 	tests := []struct {
 		info    []*registry.Info
 		target  discovery.TargetInfo
@@ -83,7 +83,7 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 
 	for _, tes := range tests {
 		r := NewEurekaRegistry([]string{"http://127.0.0.1:8761/eureka"}, 11*time.Second)
-		//ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		// ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		addrMap := map[string]*registry.Info{}
 
 		for _, info := range tes.info {
@@ -227,7 +227,7 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	})
 	go h.Spin()
 
-	for _ = range time.Tick(time.Second) {
+	for range time.Tick(time.Second) {
 		if len(r.registryIns) > 0 {
 			break
 		}
@@ -253,7 +253,7 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	if err := h.Shutdown(context.Background()); err != nil {
 		t.Errorf("HERTZ: Shutdown error=%v", err)
 	}
-	for _ = range time.Tick(time.Second) {
+	for range time.Tick(time.Second) {
 		if len(r.registryIns) == 0 {
 			break
 		}

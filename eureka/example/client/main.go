@@ -1,15 +1,3 @@
-package main
-
-import (
-	"context"
-
-	"github.com/cloudwego/hertz/pkg/app/client"
-	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
-	"github.com/cloudwego/hertz/pkg/common/config"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/eureka"
-)
-
 // Copyright 2021 CloudWeGo Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,16 +12,29 @@ import (
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package main
+
+import (
+	"context"
+
+	"github.com/cloudwego/hertz/pkg/app/client"
+	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
+	"github.com/cloudwego/hertz/pkg/common/config"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/hertz-contrib/eureka"
+)
+
 func main() {
 	cli, err := client.NewClient()
 	if err != nil {
-		panic(err)
+		hlog.Fatal(err)
+		return
 	}
 	r := eureka.NewEurekaResolver([]string{"http://127.0.0.1:8761/eureka"})
 
 	cli.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true))
 		if err != nil {
 			hlog.Fatal(err)
 		}

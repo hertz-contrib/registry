@@ -19,11 +19,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 	"net"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/common/utils"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"

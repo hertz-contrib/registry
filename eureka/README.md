@@ -44,7 +44,7 @@ func main() {
 
 ### Client
 
-**[example/standard/client/main.go](example/client/main.go)**
+**[example/client/main.go](example/client/main.go)**
 
 ```go
 package main
@@ -79,21 +79,21 @@ func main() {
 
 ```
 
-## How to run example?
+## How to Run example?
 
-### start eureka server
+### Start Eureka Server
 
 ```bash
 docker-compose up
 ```
 
-### run server
+### Run Server
 
 ```go
 go run ./example/server/main.go
 ```
 
-### run client
+### Run Client
 
 ```go
 go run ./example/client/main.go

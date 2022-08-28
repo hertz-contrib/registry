@@ -149,7 +149,6 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 // TestEurekaRegisterWithLocalIP checks the if LocalIP has been registered when IP is missing in Addr.
 // the default value of LocalIP is fe80::1
 func TestEurekaRegisterWithLocalIP(t *testing.T) {
-
 	info := &registry.Info{
 		ServiceName: "hertz.discovery.local_ip",
 		Addr:        &net.TCPAddr{Port: 8890},
@@ -179,7 +178,6 @@ func TestEurekaRegisterWithLocalIP(t *testing.T) {
 
 // TestEurekaRegisterWithDefaultWeight test if default weight has been assigned to instance.
 func TestEurekaRegisterWithDefaultWeight(t *testing.T) {
-
 	info := &registry.Info{
 		ServiceName: "hertz.discovery.default_weight",
 		Addr:        &net.TCPAddr{Port: 8890},

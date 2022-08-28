@@ -37,7 +37,7 @@ import (
 
 // TestEurekaRegistryAndDeRegistry register one or more instances for each service,
 // check if result of service discovery matches what have been registered.
-// Then tear down instance one by one, check the number of available instances is correct during the process.
+// Then tearing down instance one by one, validate the number of available instances during the process.
 func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	tests := []struct {
 		info    []*registry.Info
@@ -79,22 +79,6 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 			wantErr: false,
 			target: discovery.TargetInfo{
 				Host: "hertz.discovery.multiple",
-				Tags: nil,
-			},
-		},
-		{
-			// ip address is not specified
-			info: []*registry.Info{
-				{
-					ServiceName: "hertz.discovery.local_ip",
-					Addr:        &net.TCPAddr{Port: 8890},
-					Weight:      10,
-					Tags:        nil,
-				},
-			},
-			wantErr: false,
-			target: discovery.TargetInfo{
-				Host: "hertz.discovery.local_ip",
 				Tags: nil,
 			},
 		},
@@ -162,6 +146,66 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	}
 }
 
+// TestEurekaRegisterWithLocalIP checks the if LocalIP has been registered when IP is missing in Addr.
+// the default value of LocalIP is fe80::1
+func TestEurekaRegisterWithLocalIP(t *testing.T) {
+
+	info := &registry.Info{
+		ServiceName: "hertz.discovery.local_ip",
+		Addr:        &net.TCPAddr{Port: 8890},
+		Weight:      10,
+		Tags:        nil,
+	}
+
+	target := discovery.TargetInfo{
+		Host: "hertz.discovery.local_ip",
+		Tags: nil,
+	}
+
+	r := NewEurekaRegistry([]string{"http://127.0.0.1:8761/eureka"}, 11*time.Second)
+
+	var err error
+	if err := r.Register(info); err != nil {
+		t.Errorf("info register err")
+	}
+	assert.Nil(t, err)
+
+	resolver := NewEurekaResolver([]string{"http://127.0.0.1:8761/eureka"})
+	result, err := resolver.Resolve(context.Background(), target.Host)
+	assert.Nil(t, err)
+	assert.Equal(t, len(result.Instances), 1)
+	assert.Equal(t, result.Instances[0].Address().String(), "fe80::1:8890")
+}
+
+// TestEurekaRegisterWithDefaultWeight test if default weight has been assigned to instance.
+func TestEurekaRegisterWithDefaultWeight(t *testing.T) {
+
+	info := &registry.Info{
+		ServiceName: "hertz.discovery.default_weight",
+		Addr:        &net.TCPAddr{Port: 8890},
+		Tags:        nil,
+	}
+
+	target := discovery.TargetInfo{
+		Host: "hertz.discovery.default_weight",
+		Tags: nil,
+	}
+
+	r := NewEurekaRegistry([]string{"http://127.0.0.1:8761/eureka"}, 11*time.Second)
+
+	var err error
+	if err := r.Register(info); err != nil {
+		t.Errorf("info register err")
+	}
+	assert.Nil(t, err)
+
+	resolver := NewEurekaResolver([]string{"http://127.0.0.1:8761/eureka"})
+	result, err := resolver.Resolve(context.Background(), target.Host)
+	assert.Nil(t, err)
+	assert.Equal(t, len(result.Instances), 1)
+	assert.Equal(t, result.Instances[0].Weight(), registry.DefaultWeight)
+}
+
 // TestEurekaRegistryWithInvalidInstanceInfo run Register against a collection of invalid instance
 // in these cases, instance registration should fail.
 func TestEurekaRegistryWithInvalidInstanceInfo(t *testing.T) {
@@ -215,7 +259,7 @@ func TestEurekaRegistryWithInvalidInstanceInfo(t *testing.T) {
 	}
 }
 
-// TestRegistryAndResolver Test eureka registry complete workflow(service registry|service de-registry|service resolver)with hertz.
+// TestRegistryAndResolver test eureka registry workflow(service registry|service de-registry|service resolver)with hertz.
 func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	eurekaServer := []string{"http://127.0.0.1:8761/eureka"}
 	address := "127.0.0.1:1234"

@@ -60,9 +60,6 @@ func (c *consulResolver) Resolve(ctx context.Context, desc string) (discovery.Re
 	if err != nil {
 		return discovery.Result{}, err
 	}
-	if len(agentServiceList) == 0 {
-		return discovery.Result{CacheKey: desc}, nil
-	}
 	for _, i := range agentServiceList {
 		svc := i.Service
 		if svc == nil || svc.Address == "" {

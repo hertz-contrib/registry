@@ -23,7 +23,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hertz-contrib/consul"
+	"github.com/hertz-contrib/registry/consul"
 )
 
 func main() {

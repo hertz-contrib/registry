@@ -40,7 +40,7 @@ var (
 	cRegistry   registry.Registry
 	cResolver   discovery.Resolver
 	consulAddr  = "127.0.0.1:8500"
-	localIpAddr = "127.0.0.1"
+	localIpAddr = utils.LocalIP()
 )
 
 func init() {
@@ -61,6 +61,13 @@ func init() {
 		return
 	}
 	cResolver = NewConsulResolver(cli2)
+}
+
+// TestNewConsulResolver tests unit test preparatory work.
+func TestConsulPrepared(t *testing.T) {
+	assert.NotNil(t, cRegistry)
+	assert.NotNil(t, cResolver)
+	assert.NotEmpty(t, localIpAddr)
 }
 
 // TestNewConsulRegister tests the NewConsulRegister function.
@@ -107,13 +114,6 @@ func TestNewConsulResolver(t *testing.T) {
 
 	consulResolver := NewConsulResolver(cli)
 	assert.NotNil(t, consulResolver)
-}
-
-// TestNewConsulResolver tests unit test preparatory work.
-func TestConsulPrepared(t *testing.T) {
-	assert.NotNil(t, cRegistry)
-	assert.NotNil(t, cResolver)
-	assert.NotEmpty(t, localIpAddr)
 }
 
 // TestConsulRegister tests the Register function with Hertz.
@@ -169,7 +169,7 @@ func TestConsulRegister(t *testing.T) {
 	}
 }
 
-// TestConsulDiscovery tests the ConsulDiscovery function.
+// TestConsulDiscovery tests the ConsulDiscovery function with Hertz.
 func TestConsulDiscovery(t *testing.T) {
 	consulConfig := consulapi.DefaultConfig()
 	consulConfig.Address = consulAddr

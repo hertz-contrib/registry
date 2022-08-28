@@ -26,7 +26,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/hertz-contrib/consul"
+	"github.com/hertz-contrib/registry/consul"
 )
 
 var wg sync.WaitGroup

@@ -56,7 +56,7 @@ func NewConsulRegister(consulClient *api.Client, opts ...Option) registry.Regist
 }
 
 // Register register a service to consul.
-func (c consulRegistry) Register(info *registry.Info) error {
+func (c *consulRegistry) Register(info *registry.Info) error {
 	err := validateRegistryInfo(info)
 	if err != nil {
 		return fmt.Errorf("validating registry info failed, err: %w", err)
@@ -93,7 +93,7 @@ func (c consulRegistry) Register(info *registry.Info) error {
 }
 
 // Deregister deregister a service from consul.
-func (c consulRegistry) Deregister(info *registry.Info) error {
+func (c *consulRegistry) Deregister(info *registry.Info) error {
 	err := validateRegistryInfo(info)
 	if err != nil {
 		return fmt.Errorf("validating registry info failed, err: %w", err)

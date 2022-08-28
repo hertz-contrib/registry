@@ -1,4 +1,4 @@
-module github.com/hertz-contrib/consul
+module github.com/hertz-contrib/registry/consul
 
 go 1.16
 

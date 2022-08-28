@@ -83,12 +83,10 @@ func main() {
 
 ## How to run example?
 
-### run docker
-
-- make prepare
+### start eureka server
 
 ```bash
-make prepare
+docker-compose up
 ```
 
 ### run server

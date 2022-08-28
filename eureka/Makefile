@@ -1,3 +1,0 @@
-
-prepare:
-	docker-compose up

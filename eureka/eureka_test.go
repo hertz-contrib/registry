@@ -228,7 +228,7 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	go h.Spin()
 
 	for range time.Tick(time.Second) {
-		if len(r.registryIns) > 0 {
+		if len(r.registryIns) > 0 && h.IsRunning() {
 			break
 		}
 	}
@@ -254,7 +254,8 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 		t.Errorf("HERTZ: Shutdown error=%v", err)
 	}
 	for range time.Tick(time.Second) {
-		if len(r.registryIns) == 0 {
+		// this ensures instance has been deregistered and hertz is down
+		if len(r.registryIns) == 0 && !h.IsRunning() {
 			break
 		}
 	}

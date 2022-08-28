@@ -280,7 +280,10 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	go h.Spin()
 
 	for range time.Tick(time.Second) {
-		if h.IsRunning() {
+		r.lock.RLock()
+		registered := len(r.registryIns)
+		r.lock.RUnlock()
+		if h.IsRunning() && registered > 0 {
 			break
 		}
 	}

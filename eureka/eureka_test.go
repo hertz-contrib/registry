@@ -35,6 +35,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestEurekaRegistryAndDeRegistry register one or more instances for each service,
+// check if result of service discovery matches what have been registered.
+// Then tear down instance one by one, check the number of available instances is correct during the process.
 func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	tests := []struct {
 		info    []*registry.Info
@@ -79,11 +82,26 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 				Tags: nil,
 			},
 		},
+		{
+			// ip address is not specified
+			info: []*registry.Info{
+				{
+					ServiceName: "hertz.discovery.local_ip",
+					Addr:        &net.TCPAddr{Port: 8890},
+					Weight:      10,
+					Tags:        nil,
+				},
+			},
+			wantErr: false,
+			target: discovery.TargetInfo{
+				Host: "hertz.discovery.local_ip",
+				Tags: nil,
+			},
+		},
 	}
 
 	for _, tes := range tests {
 		r := NewEurekaRegistry([]string{"http://127.0.0.1:8761/eureka"}, 11*time.Second)
-		// ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		addrMap := map[string]*registry.Info{}
 
 		for _, info := range tes.info {
@@ -112,6 +130,7 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 			assert.Equal(t, info.Weight, instance.Weight())
 			assert.Equal(t, info.ServiceName, tes.target.Host)
 
+			// check all tags have been preserved
 			for k, expected := range info.Tags {
 				actual, exist := instance.Tag(k)
 				assert.Equal(t, true, exist)
@@ -143,6 +162,8 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	}
 }
 
+// TestEurekaRegistryWithInvalidInstanceInfo run Register against a collection of invalid instance
+// in these cases, instance registration should fail.
 func TestEurekaRegistryWithInvalidInstanceInfo(t *testing.T) {
 	tests := []struct {
 		info        *registry.Info
@@ -172,17 +193,6 @@ func TestEurekaRegistryWithInvalidInstanceInfo(t *testing.T) {
 				Addr:        nil,
 			},
 			expectedErr: ErrNilAddr,
-		},
-
-		{
-			// ip is missing
-			info: &registry.Info{
-				ServiceName: "test",
-				Weight:      10,
-				Tags:        map[string]string{"idc": "hl"},
-				Addr:        &net.TCPAddr{Port: 8889},
-			},
-			expectedErr: ErrMissingIP,
 		},
 		{
 			// port is missing
@@ -228,7 +238,7 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 	go h.Spin()
 
 	for range time.Tick(time.Second) {
-		if len(r.registryIns) > 0 && h.IsRunning() {
+		if h.IsRunning() {
 			break
 		}
 	}
@@ -254,8 +264,11 @@ func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
 		t.Errorf("HERTZ: Shutdown error=%v", err)
 	}
 	for range time.Tick(time.Second) {
-		// this ensures instance has been deregistered and hertz is down
-		if len(r.registryIns) == 0 && !h.IsRunning() {
+		// block until hertz is down
+		r.lock.RLock()
+		registered := len(r.registryIns)
+		r.lock.RUnlock()
+		if registered == 0 {
 			break
 		}
 	}

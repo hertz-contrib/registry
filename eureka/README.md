@@ -1,7 +1,5 @@
 # registry-eureka (*This is a community driven project*)
 
-[中文](README_CN.md)
-
 registry-eureka implements Hertz registry and resolver for Netflix Eureka. 
 
 ## How to use?
@@ -140,7 +138,7 @@ Alternatively, you can pass existing connection to `NewEurekaRegistryFromConn` o
 
 ### Setting Log Level
 
-As discussed, this project uses fargo as eureka client, which relies on [go-logging](github.com/op/go-logging) for logging.
+As discussed above, this project uses fargo as eureka client, which relies on [go-logging](github.com/op/go-logging) for logging.
 Unfortunately, [go-logging](github.com/op/go-logging) does not provide an interface to adjust log level. The following code demonstrates how to set log level.
 ```go
 

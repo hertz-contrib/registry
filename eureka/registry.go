@@ -17,7 +17,9 @@ package eureka
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"net"
 	"strconv"
 	"sync"
@@ -28,7 +30,25 @@ import (
 	"github.com/hudl/fargo"
 )
 
+const (
+	Eureka = "eureka"
+	TCP    = "tcp"
+	Meta   = "meta"
+)
+
 var _ registry.Registry = (*eurekaRegistry)(nil)
+
+var (
+	ErrNilInfo          = errors.New("registry info can't be nil")
+	ErrNilAddr          = errors.New("registry addr can't be nil")
+	ErrEmptyServiceName = errors.New("registry service name can't be empty")
+	ErrMissingPort      = errors.New("addr missing port")
+)
+
+type RegistryEntity struct {
+	Weight int
+	Tags   map[string]string
+}
 
 type eurekaHeartbeat struct {
 	cancel      context.CancelFunc
@@ -153,7 +173,8 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 		return nil, err
 	}
 	if host == "" || host == "::" {
-		return nil, ErrMissingIP
+		// if ip is not present, use LocalIP instead
+		host = utils.LocalIP()
 	}
 
 	port, err := strconv.ParseInt(portStr, 10, 64)
@@ -196,7 +217,7 @@ func (e *eurekaRegistry) heartBeat(ctx context.Context, ins *fargo.Instance) {
 			return
 		case <-ticker.C:
 			if err := e.eurekaConn.HeartBeatInstance(ins); err != nil {
-				hlog.Errorf("heartBeat error,err=%+v", err)
+				hlog.Errorf("HERTZ: Heartbeat error, reason: %s", err.Error())
 			}
 		}
 	}

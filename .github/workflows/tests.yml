@@ -32,7 +32,7 @@ jobs:
       eureka:
         image: 'xdockerh/eureka-server:latest'
         ports:
-          - 8761:8761
+          - "8761:8761"
     steps:
       - uses: actions/checkout@v3
 

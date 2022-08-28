@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
 	"testing"
 	"time"
 
@@ -129,7 +128,7 @@ func TestConsulRegister(t *testing.T) {
 
 	var (
 		testSvcName   = "hertz.test.demo1"
-		testSvcPort   = fmt.Sprintf("%d", 8081)
+		testSvcPort   = fmt.Sprintf("%d", 8581)
 		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
 		testSvcWeight = 777
 		metaList      = map[string]string{
@@ -139,26 +138,21 @@ func TestConsulRegister(t *testing.T) {
 		}
 	)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		r := NewConsulRegister(consulClient)
-		h := server.Default(
-			server.WithHostPorts(testSvcAddr),
-			server.WithRegistry(r, &registry.Info{
-				ServiceName: testSvcName,
-				Addr:        utils.NewNetAddr("tcp", testSvcAddr),
-				Weight:      testSvcWeight,
-				Tags:        metaList,
-			}),
-		)
+	r := NewConsulRegister(consulClient)
+	h := server.Default(
+		server.WithHostPorts(testSvcAddr),
+		server.WithRegistry(r, &registry.Info{
+			ServiceName: testSvcName,
+			Addr:        utils.NewNetAddr("tcp", testSvcAddr),
+			Weight:      testSvcWeight,
+			Tags:        metaList,
+		}),
+	)
 
-		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
-		})
-		h.Spin()
-	}()
+	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+	})
+	go h.Spin()
 
 	// wait for health check passing
 	time.Sleep(time.Second * 6)
@@ -187,7 +181,7 @@ func TestConsulDiscovery(t *testing.T) {
 
 	var (
 		testSvcName   = "hertz.test.demo2"
-		testSvcPort   = fmt.Sprintf("%d", 8082)
+		testSvcPort   = fmt.Sprintf("%d", 8582)
 		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
 		testSvcWeight = 777
 		metaList      = map[string]string{
@@ -197,26 +191,21 @@ func TestConsulDiscovery(t *testing.T) {
 		}
 	)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		r := NewConsulRegister(consulClient)
-		h := server.Default(
-			server.WithHostPorts(testSvcAddr),
-			server.WithRegistry(r, &registry.Info{
-				ServiceName: testSvcName,
-				Addr:        utils.NewNetAddr("tcp", testSvcAddr),
-				Weight:      testSvcWeight,
-				Tags:        metaList,
-			}),
-		)
+	r := NewConsulRegister(consulClient)
+	h := server.Default(
+		server.WithHostPorts(testSvcAddr),
+		server.WithRegistry(r, &registry.Info{
+			ServiceName: testSvcName,
+			Addr:        utils.NewNetAddr("tcp", testSvcAddr),
+			Weight:      testSvcWeight,
+			Tags:        metaList,
+		}),
+	)
 
-		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
-		})
-		h.Spin()
-	}()
+	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+	})
+	go h.Spin()
 
 	// wait for health check passing
 	time.Sleep(time.Second * 6)
@@ -227,13 +216,12 @@ func TestConsulDiscovery(t *testing.T) {
 		panic(err)
 	}
 	cli.Use(sd.Discovery(cResolver))
-	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo2/ping", config.WithSD(true))
-		if err != nil {
-			hlog.Fatal(err)
-		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+	status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo2/ping", config.WithSD(true))
+	if err != nil {
+		hlog.Fatal(err)
 	}
+	assert.Equal(t, "{\"ping\":\"pong1\"}", string(body))
+	assert.Equal(t, 200, status)
 }
 
 // TestConsulDeregister tests the Deregister function with Hertz
@@ -248,7 +236,7 @@ func TestConsulDeregister(t *testing.T) {
 
 	var (
 		testSvcName   = "hertz.test.demo3"
-		testSvcPort   = fmt.Sprintf("%d", 8083)
+		testSvcPort   = fmt.Sprintf("%d", 8583)
 		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
 		testSvcWeight = 777
 		metaList      = map[string]string{
@@ -256,7 +244,6 @@ func TestConsulDeregister(t *testing.T) {
 			"k2": "vv2",
 			"k3": "vv3",
 		}
-		hertzServer  *server.Hertz
 		ctx          = context.Background()
 		registryInfo = &registry.Info{
 			ServiceName: testSvcName,
@@ -266,21 +253,16 @@ func TestConsulDeregister(t *testing.T) {
 		}
 	)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		r := NewConsulRegister(consulClient)
-		hertzServer = server.Default(
-			server.WithHostPorts(testSvcAddr),
-			server.WithRegistry(r, registryInfo),
-		)
+	r := NewConsulRegister(consulClient)
+	h := server.Default(
+		server.WithHostPorts(testSvcAddr),
+		server.WithRegistry(r, registryInfo),
+	)
 
-		hertzServer.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
-		})
-		hertzServer.Spin()
-	}()
+	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+	})
+	go h.Spin()
 
 	// wait for health check passing
 	time.Sleep(time.Second * 6)
@@ -290,7 +272,7 @@ func TestConsulDeregister(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result.Instances))
 
-	err = hertzServer.Shutdown(ctx)
+	err = h.Shutdown(ctx)
 	if err != nil {
 		log.Fatal(err)
 		return

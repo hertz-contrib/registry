@@ -19,12 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/hertz-contrib/registry/polaris"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -169,19 +167,12 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 		return nil, ErrEmptyServiceName
 	}
 
-	host, portStr, err := net.SplitHostPort(info.Addr.String())
+	// TODO: move host and port extraction logic to the same package
+	host, port, err := polaris.GetInfoHostAndPort(info.Addr.String())
 	if err != nil {
 		return nil, err
-	}
-	if host == "" || host == "::" {
-		// if ip is not present, use LocalIP instead
-		host = utils.LocalIP()
 	}
 
-	port, err := strconv.ParseInt(portStr, 10, 64)
-	if err != nil {
-		return nil, err
-	}
 	if port <= 0 {
 		return nil, ErrMissingPort
 	}

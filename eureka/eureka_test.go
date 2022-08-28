@@ -146,37 +146,7 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	}
 }
 
-// TestEurekaRegisterWithLocalIP checks the if LocalIP has been registered when IP is missing in Addr.
-// the default value of LocalIP is fe80::1
-func TestEurekaRegisterWithLocalIP(t *testing.T) {
-	info := &registry.Info{
-		ServiceName: "hertz.discovery.local_ip",
-		Addr:        &net.TCPAddr{Port: 8890},
-		Weight:      10,
-		Tags:        nil,
-	}
-
-	target := discovery.TargetInfo{
-		Host: "hertz.discovery.local_ip",
-		Tags: nil,
-	}
-
-	r := NewEurekaRegistry([]string{"http://127.0.0.1:8761/eureka"}, 11*time.Second)
-
-	var err error
-	if err := r.Register(info); err != nil {
-		t.Errorf("info register err")
-	}
-	assert.Nil(t, err)
-
-	resolver := NewEurekaResolver([]string{"http://127.0.0.1:8761/eureka"})
-	result, err := resolver.Resolve(context.Background(), target.Host)
-	assert.Nil(t, err)
-	assert.Equal(t, len(result.Instances), 1)
-	assert.Equal(t, result.Instances[0].Address().String(), "fe80::1:8890")
-}
-
-// TestEurekaRegisterWithDefaultWeight test if default weight has been assigned to instance.
+// TestEurekaRegisterWithDefaultWeight test if the default weight has been assigned to instance.
 func TestEurekaRegisterWithDefaultWeight(t *testing.T) {
 	info := &registry.Info{
 		ServiceName: "hertz.discovery.default_weight",

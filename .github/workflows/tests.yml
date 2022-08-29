@@ -7,6 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      consul:
+        image: consul:latest
+        ports:
+          - '8500:8500'
       polaris:
         image: polarismesh/polaris-server-standalone:v1.10.0
         ports:
@@ -21,11 +25,11 @@ jobs:
           - '30100:30100'
       etcd:
         image: bitnami/etcd:latest
-        ports:                    
+        ports:
           - "2379:2379"
           - "2380:2380"
-        env:            
-          ALLOW_NONE_AUTHENTICATION: yes 
+        env:
+          ALLOW_NONE_AUTHENTICATION: yes
           ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
       nacos:
         image: 'nacos/nacos-server:2.0.3'

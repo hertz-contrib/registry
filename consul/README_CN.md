@@ -9,6 +9,7 @@
 ### 服务端
 
 #### 基本使用
+
 ```
 import (
 	"context"
@@ -55,7 +56,9 @@ func main() {
 ```
 
 #### 自定义服务检查
+
 注册中心默认配置服务检查，如下：
+
 ```
 check.Timeout = "5s"
 check.Interval = "5s"
@@ -126,9 +129,10 @@ func main() {
 ```
 
 ## 使用样例
-服务端：`example/server/main.go`
 
-客户端：`example/client/main.go`
+[服务端](example/server/main.go)：`example/server/main.go`
+
+[客户端](example/client/main.go)：`example/client/main.go`
 
 ## 兼容性
 

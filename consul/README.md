@@ -136,6 +136,8 @@ func main() {
 
 ## Compatibility
 
-Compatible with consul.
+Compatible with consul from v1.11.x to v1.13.x.
+
+[consul version list](https://releases.hashicorp.com/consul)
 
 maintained by: [Lemonfish](https://github.com/LemonFish873310466)

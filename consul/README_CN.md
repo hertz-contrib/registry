@@ -136,6 +136,8 @@ func main() {
 
 ## 兼容性
 
-与Consul保持兼容。
+与Consul(**v1.11.x到v1.13.x**)保持兼容。
+
+[consul版本列表](https://releases.hashicorp.com/consul)
 
 维护者: [Lemonfish](https://github.com/LemonFish873310466)

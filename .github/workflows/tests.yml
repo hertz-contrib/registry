@@ -15,6 +15,10 @@ jobs:
         image: 'zookeeper:3.7.0'
         ports:
           - '2181:2181'
+      servicecomb:
+        image: 'servicecomb/service-center:latest'
+        ports:
+          - '30100:30100'
       etcd:
         image: bitnami/etcd:latest
         ports:                    

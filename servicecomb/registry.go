@@ -262,10 +262,13 @@ func (scr *serviceCombRegistry) validRegistryInfo(info *registry.Info) error {
 func (scr *serviceCombRegistry) parseAddr(s string) (string, error) {
 	host, port, err := net.SplitHostPort(s)
 	if err != nil {
-		return "", fmt.Errorf("parse deregistry info addr error: %w", err)
+		return "", fmt.Errorf("parse addr error: %w", err)
 	}
 	if host == "" || host == "::" {
 		host = utils.LocalIP()
+		if host == utils.UNKNOWN_IP_ADDR {
+			return "", errors.New("get local ip error")
+		}
 	}
 
 	return net.JoinHostPort(host, port), nil

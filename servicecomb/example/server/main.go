@@ -24,7 +24,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/hertz-contrib/servicecomb"
+	"github.com/hertz-contrib/registry/servicecomb"
 )
 
 const scAddr = "127.0.0.1:30100"

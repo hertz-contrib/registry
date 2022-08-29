@@ -19,7 +19,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/hertz-contrib/servicecomb"
+	"github.com/hertz-contrib/registry/servicecomb"
 )
 
 func main() {
@@ -59,7 +59,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/servicecomb"
+	"github.com/hertz-contrib/registry/servicecomb"
 )
 
 func main() {

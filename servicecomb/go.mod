@@ -1,4 +1,4 @@
-module github.com/hertz-contrib/servicecomb
+module github.com/hertz-contrib/registry/servicecomb
 
 go 1.19
 

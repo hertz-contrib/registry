@@ -210,7 +210,7 @@ func (scr *serviceCombRegistry) Deregister(info *registry.Info) error {
 		}
 	}
 	if instanceId != "" {
-		// unregister is to slow to effect, mark it down first.
+		// unregister is too slow to take effect, update status to down first.
 		_, err = scr.cli.UpdateMicroServiceInstanceStatus(serviceId, instanceId, sc.MSIinstanceDown)
 		if err != nil {
 			return fmt.Errorf("down service error: %w", err)

@@ -10,7 +10,9 @@ Support Hertz to use Consul for service registration and discovery
 
 #### Basic Usage
 
-```
+```golang
+package main
+
 import (
 	"context"
 	"log"
@@ -21,7 +23,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hertz-contrib/consul"
+	"github.com/hertz-contrib/registry/consul"
 )
 
 
@@ -67,12 +69,14 @@ check.DeregisterCriticalServiceAfter = "1m"
 
 you can also use `WithCheck` to modify your config
 
-```
+```golang
+package main
+
 import (
 	"log"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hertz-contrib/consul"
+	"github.com/hertz-contrib/registry/consul"
 )
 
 func main() {
@@ -97,14 +101,16 @@ func main() {
 
 ### Client
 
-```
+```golang
+package main
+
 import (
 	"log"
 
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hertz-contrib/consul"
+	"github.com/hertz-contrib/registry/consul"
 )
 
 func main() {

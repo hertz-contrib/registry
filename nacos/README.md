@@ -91,13 +91,13 @@ make prepare
 ### run server
 
 ```go
-go run ./example/standard/server/main.go
+go run ./examples/standard/server/main.go
 ```
 
 ### run client
 
 ```go
-go run ./example/standard/client/main.go
+go run ./examples/standard/client/main.go
 ```
 
 ```go

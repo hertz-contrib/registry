@@ -1,3 +1,17 @@
+// Copyright 2021 CloudWeGo Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package redis
 
 import (
@@ -152,10 +166,17 @@ func TestResolve(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, res.CacheKey, test.info.ServiceName)
-		for i, ins := range res.Instances {
-			args := test.info.Args[i]
-			assert.Equal(t, args.Addr, ins.Address().String())
-			assert.Equal(t, args.Weight, ins.Weight())
+		addr := make(map[string]struct{})
+		weight := make(map[int]struct{})
+		for _, arg := range test.info.Args {
+			addr[arg.Addr] = struct{}{}
+			weight[arg.Weight] = struct{}{}
+		}
+		for _, ins := range res.Instances {
+			_, addrOK := addr[ins.Address().String()]
+			_, weightOK := weight[ins.Weight()]
+			assert.True(t, addrOK)
+			assert.True(t, weightOK)
 		}
 	}
 }

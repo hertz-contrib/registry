@@ -1,4 +1,4 @@
-module registry/redis
+module github.com/hertz-contrib/registry/redis
 
 go 1.16
 

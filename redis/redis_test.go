@@ -1,4 +1,4 @@
-// Copyright 2021 CloudWeGo Authors.
+// Copyright 2022 CloudWeGo Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -186,21 +186,4 @@ func TestNewMentor(t *testing.T) {
 	m1 := newMentor()
 	m2 := newMentor()
 	assert.Equal(t, m1, m2)
-}
-
-// TestForm test form operation
-func TestForm(t *testing.T) {
-	m := newMentor()
-	m.insertForm("hertz", "127.0.0.1:8000")
-	m.insertForm("hertz", "127.0.0.1:8001")
-	m.insertForm("cloudwego", "127.0.0.1:9999")
-	assert.Equal(t, map[string]addrs{
-		"hertz":     {"127.0.0.1:8000", "127.0.0.1:8001"},
-		"cloudwego": {"127.0.0.1:9999"},
-	}, m.mform)
-	m.removeService("cloudwego")
-	m.removeAddr("hertz", "127.0.0.1:8001")
-	assert.Equal(t, map[string]addrs{
-		"hertz": {"127.0.0.1:8000"},
-	}, m.mform)
 }

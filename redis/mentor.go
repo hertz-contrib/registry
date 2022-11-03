@@ -66,7 +66,6 @@ func (m *mentor) subscribe(ctx context.Context, info *registry.Info, r *redisReg
 			}
 		}
 	}
-
 }
 
 func (m *mentor) monitorTTL(ctx context.Context, hash *registryHash, info *registry.Info, r *redisRegistry) {
@@ -84,7 +83,7 @@ func (m *mentor) monitorTTL(ctx context.Context, hash *registryHash, info *regis
 	}
 }
 
-func (m *mentor) insertForm(serviceName string, addr string) {
+func (m *mentor) insertForm(serviceName, addr string) {
 	m.mform[serviceName] = append(m.mform[serviceName], addr)
 }
 
@@ -92,7 +91,7 @@ func (m *mentor) removeService(serviceName string) {
 	delete(m.mform, serviceName)
 }
 
-func (m *mentor) removeAddr(serviceName string, addr string) {
+func (m *mentor) removeAddr(serviceName, addr string) {
 	for i, v := range m.mform[serviceName] {
 		if v == addr {
 			m.mform[serviceName] = append(m.mform[serviceName][:i], m.mform[serviceName][i+1:]...)

@@ -25,8 +25,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var redisCli *redis.Client
-var ctx = context.Background()
+var (
+	redisCli *redis.Client
+	ctx      = context.Background()
+)
 
 func init() {
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})

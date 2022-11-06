@@ -37,7 +37,7 @@ type registryContext struct {
 	cancel context.CancelFunc
 }
 
-// NewRedisRegistry create a redis registry
+// NewRedisRegistry creates a redis registry
 func NewRedisRegistry(addr string, opts ...Option) registry.Registry {
 	redisOpts := &redis.Options{
 		Addr:     addr,

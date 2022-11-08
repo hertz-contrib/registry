@@ -16,7 +16,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -45,7 +44,7 @@ func newMentor() *mentor {
 }
 
 func (m *mentor) subscribe(ctx context.Context, info *registry.Info, r *redisRegistry) {
-	sub := r.client.Subscribe(ctx, fmt.Sprintf("/%s/%s/%s", hertz, info.ServiceName, server))
+	sub := r.client.Subscribe(ctx, generateKey(info.ServiceName, server))
 	defer sub.Close()
 	r.wg.Done()
 	select {

@@ -17,7 +17,6 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -30,7 +29,7 @@ type redisResolver struct {
 	client *redis.Client
 }
 
-// NewRedisResolver create a redis resolver
+// NewRedisResolver creates a redis resolver
 func NewRedisResolver(addr string, opts ...Option) discovery.Resolver {
 	redisOpts := &redis.Options{Addr: addr}
 	for _, opt := range opts {
@@ -48,7 +47,7 @@ func (r *redisResolver) Target(_ context.Context, target *discovery.TargetInfo) 
 
 func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
 	rdb := r.client
-	fvs := rdb.HGetAll(ctx, fmt.Sprintf("/%s/%s/%s", hertz, desc, server)).Val()
+	fvs := rdb.HGetAll(ctx, generateKey(desc, server)).Val()
 	var (
 		ri  registryInfo
 		its []discovery.Instance
@@ -57,6 +56,7 @@ func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Res
 		err := json.Unmarshal([]byte(v), &ri)
 		if err != nil {
 			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore instance Addr: %v", err, f)
+			continue
 		}
 		weight := ri.Weight
 		if weight <= 0 {

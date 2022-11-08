@@ -37,6 +37,7 @@ func init() {
 
 // TestRegister Test the Registry in registry.go
 func TestRegister(t *testing.T) {
+	defer redisCli.FlushDB(ctx)
 	tests := []struct {
 		info    []*registry.Info
 		wantErr bool
@@ -94,6 +95,7 @@ func TestRegister(t *testing.T) {
 
 // TestResolve Test the Resolver in resolver.go
 func TestResolve(t *testing.T) {
+	defer redisCli.FlushDB(ctx)
 	type args struct {
 		Addr   string
 		Weight int

@@ -107,13 +107,21 @@ func validateRegistryInfo(info *registry.Info) error {
 	return nil
 }
 
+func generateKey(serviceName, serviceType string) string {
+	return fmt.Sprintf("/%s/%s/%s", hertz, serviceName, serviceType)
+}
+
+func generateMsg(msgType, serviceName, serviceAddr string) string {
+	return fmt.Sprintf("%s-%s-%s", msgType, serviceName, serviceAddr)
+}
+
 func prepareRegistryHash(info *registry.Info) (*registryHash, error) {
 	meta, err := json.Marshal(convertInfo(info))
 	if err != nil {
 		return nil, err
 	}
 	return &registryHash{
-		key:   fmt.Sprintf("/hertz/%s/%s", info.ServiceName, server),
+		key:   generateKey(info.ServiceName, server),
 		field: info.Addr.String(),
 		value: string(meta),
 	}, nil

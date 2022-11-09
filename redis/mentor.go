@@ -17,6 +17,7 @@ package redis
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -31,6 +32,7 @@ type addrs []string
 
 type mentor struct {
 	mform map[string]addrs
+	mu    sync.Mutex
 }
 
 // newMentor use singleton
@@ -55,11 +57,15 @@ func (m *mentor) subscribe(ctx context.Context, info *registry.Info, r *redisReg
 		for msg := range ch {
 			split := strings.Split(msg.Payload, "-")
 			if split[0] == register {
+				m.mu.Lock()
 				m.insertForm(split[1], split[2])
 				hlog.Infof("HERTZ: service info %v", m.mform)
+				m.mu.Unlock()
 			} else if split[0] == deregister {
+				m.mu.Lock()
 				m.removeAddr(split[1], split[2])
 				hlog.Infof("HERTZ: service info %v", m.mform)
+				m.mu.Unlock()
 			} else {
 				hlog.Warnf("HERTZ: invalid message %v", msg)
 			}
@@ -74,7 +80,9 @@ func (m *mentor) monitorTTL(ctx context.Context, hash *registryHash, info *regis
 		select {
 		case <-ticker.C:
 			if r.client.TTL(ctx, hash.key).Val() == -2 {
+				m.mu.Lock()
 				m.removeService(info.ServiceName)
+				m.mu.Unlock()
 			}
 		case <-ctx.Done():
 			break

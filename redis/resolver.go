@@ -48,11 +48,9 @@ func (r *redisResolver) Target(_ context.Context, target *discovery.TargetInfo) 
 func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
 	rdb := r.client
 	fvs := rdb.HGetAll(ctx, generateKey(desc, server)).Val()
-	var (
-		ri  registryInfo
-		its []discovery.Instance
-	)
+	var its []discovery.Instance
 	for f, v := range fvs {
+		var ri registryInfo
 		err := json.Unmarshal([]byte(v), &ri)
 		if err != nil {
 			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore instance Addr: %v", err, f)

@@ -88,6 +88,14 @@ func WithTLSOpt(certFile, keyFile, caFile string) Option {
 	}
 }
 
+// WithAuthOpt returns an option that authentication by username and password.
+func WithAuthOpt(username, password string) Option {
+	return func(cfg *clientv3.Config) {
+		cfg.Username = username
+		cfg.Password = password
+	}
+}
+
 func newTLSConfig(certFile, keyFile, caFile, serverName string) (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {

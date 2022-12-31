@@ -39,7 +39,7 @@ func NewConsulResolver(consulClient *api.Client) discovery.Resolver {
 }
 
 // Target return a description for the given target that is suitable for being a key for cache.
-func (c *consulResolver) Target(ctx context.Context, target *discovery.TargetInfo) (description string) {
+func (c *consulResolver) Target(_ context.Context, target *discovery.TargetInfo) (description string) {
 	return target.Host
 }
 
@@ -49,7 +49,7 @@ func (c *consulResolver) Name() string {
 }
 
 // Resolve a service info by desc.
-func (c *consulResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
+func (c *consulResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
 	var eps []discovery.Instance
 	agentServiceList, _, err := c.consulClient.Health().Service(desc, "", true, nil)
 	if err != nil {

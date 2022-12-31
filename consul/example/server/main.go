@@ -28,6 +28,11 @@ import (
 	"github.com/hertz-contrib/registry/consul"
 )
 
+const (
+	Addr1 = "<your host>:8888"
+	Addr2 = "<your host>:8889"
+)
+
 var wg sync.WaitGroup
 
 func main() {
@@ -42,13 +47,12 @@ func main() {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8888"
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
-			server.WithHostPorts(addr),
+			server.WithHostPorts(Addr1),
 			server.WithRegistry(r, &registry.Info{
 				ServiceName: "hertz.test.demo",
-				Addr:        utils.NewNetAddr("tcp", addr),
+				Addr:        utils.NewNetAddr("tcp", Addr1),
 				Weight:      10,
 				Tags:        nil,
 			}),
@@ -61,13 +65,12 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8889"
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
-			server.WithHostPorts(addr),
+			server.WithHostPorts(Addr2),
 			server.WithRegistry(r, &registry.Info{
 				ServiceName: "hertz.test.demo",
-				Addr:        utils.NewNetAddr("tcp", addr),
+				Addr:        utils.NewNetAddr("tcp", Addr2),
 				Weight:      10,
 				Tags:        nil,
 			}),

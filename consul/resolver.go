@@ -34,12 +34,7 @@ type consulResolver struct {
 var _ discovery.Resolver = (*consulResolver)(nil)
 
 // NewConsulResolver create a service resolver using consul.
-func NewConsulResolver(consulClient *api.Client, opts ...Option) discovery.Resolver {
-	op := options{}
-	for _, opt := range opts {
-		opt(&op)
-	}
-
+func NewConsulResolver(consulClient *api.Client) discovery.Resolver {
 	return &consulResolver{consulClient: consulClient}
 }
 

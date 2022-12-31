@@ -19,13 +19,12 @@ import (
 	"log"
 	"sync"
 
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	consulapi "github.com/hashicorp/consul/api"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hertz-contrib/registry/consul"
 )
 

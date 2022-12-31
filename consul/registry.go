@@ -29,6 +29,12 @@ const (
 	DefaultCheckDeregisterCriticalServiceAfter = "1m"
 )
 
+var (
+	ErrNilInfo            = errors.New("info is nil")
+	ErrMissingServiceName = errors.New("missing service name in consul register")
+	ErrMissingAddr        = errors.New("missing addr in consul register")
+)
+
 type consulRegistry struct {
 	consulClient *api.Client
 	opts         options
@@ -124,13 +130,13 @@ func defaultCheck() *api.AgentServiceCheck {
 
 func validateRegistryInfo(info *registry.Info) error {
 	if info == nil {
-		return errors.New("info is nil")
+		return ErrNilInfo
 	}
 	if info.ServiceName == "" {
-		return errors.New("missing service name in consul register")
+		return ErrMissingServiceName
 	}
 	if info.Addr == nil {
-		return errors.New("missing addr in consul register")
+		return ErrMissingAddr
 	}
 
 	return nil

@@ -23,6 +23,12 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+const (
+	DefaultCheckInterval                       = "5s"
+	DefaultCheckTimeout                        = "5s"
+	DefaultCheckDeregisterCriticalServiceAfter = "1m"
+)
+
 type consulRegistry struct {
 	consulClient *api.Client
 	opts         options
@@ -109,9 +115,9 @@ func (c *consulRegistry) Deregister(info *registry.Info) error {
 
 func defaultCheck() *api.AgentServiceCheck {
 	check := new(api.AgentServiceCheck)
-	check.Timeout = "5s"
-	check.Interval = "5s"
-	check.DeregisterCriticalServiceAfter = "1m"
+	check.Timeout = DefaultCheckTimeout
+	check.Interval = DefaultCheckInterval
+	check.DeregisterCriticalServiceAfter = DefaultCheckDeregisterCriticalServiceAfter
 
 	return check
 }

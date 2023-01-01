@@ -40,7 +40,7 @@ var (
 	cRegistry   registry.Registry
 	cResolver   discovery.Resolver
 	consulAddr  = "127.0.0.1:8500"
-	localIpAddr = utils.LocalIP()
+	localIpAddr string
 )
 
 func init() {
@@ -61,6 +61,11 @@ func init() {
 		return
 	}
 	cResolver = NewConsulResolver(cli2)
+
+	localIpAddr, err = GetLocalIPv4Address()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // TestNewConsulResolver tests unit test preparatory work.
@@ -83,7 +88,7 @@ func TestNewConsulRegister(t *testing.T) {
 	assert.NotNil(t, consulRegister)
 }
 
-// TestNewConsulResolver tests the NewConsulResolver function with check option.
+// TestNewConsulResolver tests the NewConsulRegister function with check option.
 func TestNewConsulRegisterWithCheckOption(t *testing.T) {
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr
@@ -98,7 +103,7 @@ func TestNewConsulRegisterWithCheckOption(t *testing.T) {
 	check.Interval = "10s"
 	check.DeregisterCriticalServiceAfter = "1m"
 
-	consulResolver := NewConsulResolver(cli, WithCheck(check))
+	consulResolver := NewConsulRegister(cli, WithCheck(check))
 	assert.NotNil(t, consulResolver)
 }
 

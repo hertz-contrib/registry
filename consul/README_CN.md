@@ -135,9 +135,9 @@ func main() {
 
 ## 使用样例
 
-[服务端](example/server/main.go)：`example/server/main.go`
+[服务端](example/basic/server/main.go)：`example/server/main.go`
 
-[客户端](example/client/main.go)：`example/client/main.go`
+[客户端](example/basic/client/main.go)：`example/client/main.go`
 
 ## 兼容性
 

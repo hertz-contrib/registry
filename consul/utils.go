@@ -20,7 +20,6 @@ import (
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 )
 
 func parseAddr(addr net.Addr) (host string, port int, err error) {
@@ -30,7 +29,10 @@ func parseAddr(addr net.Addr) (host string, port int, err error) {
 	}
 
 	if host == "" || host == "::" {
-		host = utils.LocalIP()
+		host, err = GetLocalIPv4Address()
+		if err != nil {
+			return "", 0, fmt.Errorf("get local ipv4 error, cause %w", err)
+		}
 	}
 
 	port, err = strconv.Atoi(portStr)
@@ -50,4 +52,22 @@ func getServiceId(info *registry.Info) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%s:%s:%d", info.ServiceName, host, port), nil
+}
+
+func GetLocalIPv4Address() (string, error) {
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addr {
+		ipNet, isIpNet := addr.(*net.IPNet)
+		if isIpNet && !ipNet.IP.IsLoopback() {
+			ipv4 := ipNet.IP.To4()
+			if ipv4 != nil {
+				return ipv4.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("not found ipv4 address")
 }

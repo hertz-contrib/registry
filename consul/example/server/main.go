@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -28,11 +29,6 @@ import (
 	"github.com/hertz-contrib/registry/consul"
 )
 
-const (
-	Addr1 = "<your host>:8888"
-	Addr2 = "<your host>:8889"
-)
-
 var wg sync.WaitGroup
 
 func main() {
@@ -43,16 +39,21 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+	localIP, err := consul.GetLocalIPv4Address()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
+		addr := fmt.Sprintf("%s:8888", localIP)
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
-			server.WithHostPorts(Addr1),
+			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
 				ServiceName: "hertz.test.demo",
-				Addr:        utils.NewNetAddr("tcp", Addr1),
+				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags:        nil,
 			}),
@@ -65,12 +66,13 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
+		addr := fmt.Sprintf("%s:8889", localIP)
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
-			server.WithHostPorts(Addr2),
+			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
 				ServiceName: "hertz.test.demo",
-				Addr:        utils.NewNetAddr("tcp", Addr2),
+				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags:        nil,
 			}),

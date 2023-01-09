@@ -88,7 +88,7 @@ func TestNewConsulRegister(t *testing.T) {
 	assert.NotNil(t, consulRegister)
 }
 
-// TestNewConsulResolver tests the NewConsulRegister function with check option.
+// TestNewConsulRegisterWithCheckOption tests the NewConsulRegister function with check option.
 func TestNewConsulRegisterWithCheckOption(t *testing.T) {
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr

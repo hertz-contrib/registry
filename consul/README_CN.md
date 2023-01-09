@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -39,7 +40,11 @@ func main() {
 	r := consul.NewConsulRegister(consulClient)
 
 	// run Hertz with the consul register
-	addr := "127.0.0.1:8888"
+	localIP, err := consul.GetLocalIPv4Address()
+	if err != nil {
+		log.Fatal(err)
+	}
+	addr := fmt.Sprintf("%s:8888",localIP)
 	h := server.Default(
 		server.WithHostPorts(addr),
 		server.WithRegistry(r, &registry.Info{
@@ -145,4 +150,4 @@ func main() {
 
 [consul版本列表](https://releases.hashicorp.com/consul)
 
-维护者: [Lemonfish](https://github.com/LemonFish873310466)
+维护者: [Lemonfish](https://github.com/LemonFish873310466) / [claude-zq](https://github.com/Claude-Zq)

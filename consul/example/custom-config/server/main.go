@@ -31,6 +31,11 @@ import (
 
 var wg sync.WaitGroup
 
+type Example struct {
+	A int `json:"a"`
+	B int `json:"b"`
+}
+
 func main() {
 	config := api.DefaultConfig()
 	config.Address = "127.0.0.1:8500"
@@ -72,6 +77,14 @@ func main() {
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
 		})
+		h.POST("/ping", func(c context.Context, ctx *app.RequestContext) {
+			e := Example{}
+			if err := ctx.Bind(&e); err != nil {
+				ctx.String(consts.StatusBadRequest, err.Error())
+				return
+			}
+			ctx.JSON(consts.StatusOK, e)
+		})
 		h.Spin()
 	}()
 
@@ -91,6 +104,14 @@ func main() {
 		)
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong2"})
+		})
+		h.POST("/ping", func(c context.Context, ctx *app.RequestContext) {
+			e := Example{}
+			if err := ctx.Bind(&e); err != nil {
+				ctx.String(consts.StatusBadRequest, err.Error())
+				return
+			}
+			ctx.JSON(consts.StatusOK, e)
 		})
 		h.Spin()
 	}()

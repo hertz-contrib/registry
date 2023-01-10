@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -26,9 +27,15 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/protocol"
 	"github.com/hashicorp/consul/api"
 	"github.com/hertz-contrib/registry/consul"
 )
+
+type Example struct {
+	A int `json:"a"`
+	B int `json:"b"`
+}
 
 func main() {
 	// build a consul client
@@ -46,6 +53,7 @@ func main() {
 	discoveryWithTag(r)
 	discoveryWithCustomizedAddr(r)
 	discoveryWithLoadBalanceOptions(r)
+	discoveryThenUsePostMethod(r)
 }
 
 func discoveryWithSD(r discovery.Resolver) {
@@ -118,5 +126,34 @@ func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
 			hlog.Fatal(err)
 		}
 		hlog.Infof("code=%d,body=%s", status, string(body))
+	}
+}
+
+func discoveryThenUsePostMethod(r discovery.Resolver) {
+	fmt.Println("discovery and use post method to send request:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	cli.Use(sd.Discovery(r))
+
+	for i := 0; i < 10; i++ {
+		// set request config、method、request uri.
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true))
+		req.SetMethod("POST")
+		req.SetRequestURI("http://custom-config-demo/ping")
+		t := Example{A: i, B: i}
+		bytes, _ := json.Marshal(t)
+		// set body and content type
+		req.SetBody(bytes)
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err := cli.Do(context.Background(), req, resp)
+		if err != nil {
+			hlog.Fatal(err)
+		}
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }

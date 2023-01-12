@@ -29,7 +29,10 @@ import (
 	"github.com/hertz-contrib/registry/consul"
 )
 
-var wg sync.WaitGroup
+var (
+	wg      sync.WaitGroup
+	localIP = "your ip"
+)
 
 type Example struct {
 	A int `json:"a"`
@@ -52,11 +55,6 @@ func main() {
 		DeregisterCriticalServiceAfter: "15s",
 	}
 	r := consul.NewConsulRegister(consulClient, consul.WithCheck(check))
-
-	localIP, err := consul.GetLocalIPv4Address()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	wg.Add(2)
 	go func() {

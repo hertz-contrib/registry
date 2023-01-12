@@ -62,10 +62,27 @@ func init() {
 	}
 	cResolver = NewConsulResolver(cli2)
 
-	localIpAddr, err = GetLocalIPv4Address()
+	localIpAddr, err = getLocalIPv4Address()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getLocalIPv4Address() (string, error) {
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+	for _, addr := range addr {
+		ipNet, isIpNet := addr.(*net.IPNet)
+		if isIpNet && !ipNet.IP.IsLoopback() {
+			ipv4 := ipNet.IP.To4()
+			if ipv4 != nil {
+				return ipv4.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("not found ipv4 address")
 }
 
 // TestNewConsulResolver tests unit test preparatory work.

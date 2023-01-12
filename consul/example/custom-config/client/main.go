@@ -32,6 +32,8 @@ import (
 	"github.com/hertz-contrib/registry/consul"
 )
 
+var localIP = "your ip"
+
 type Example struct {
 	A int `json:"a"`
 	B int `json:"b"`
@@ -93,11 +95,6 @@ func discoveryWithCustomizedAddr(r discovery.Resolver) {
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
-	}
-
-	localIP, err := consul.GetLocalIPv4Address()
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	cli.Use(sd.Discovery(r, sd.WithCustomizedAddrs(fmt.Sprintf("%s:5001", localIP))))

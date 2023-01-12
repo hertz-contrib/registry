@@ -29,7 +29,10 @@ import (
 	"github.com/hertz-contrib/registry/consul"
 )
 
-var wg sync.WaitGroup
+var (
+	wg      sync.WaitGroup
+	localIP = "your ip"
+)
 
 func main() {
 	config := consulapi.DefaultConfig()
@@ -38,10 +41,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 		return
-	}
-	localIP, err := consul.GetLocalIPv4Address()
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	wg.Add(2)

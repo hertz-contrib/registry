@@ -16,8 +16,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net"
 	"sync"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -59,7 +59,7 @@ func main() {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		addr := fmt.Sprintf("%s:%d", localIP, 5001)
+		addr := net.JoinHostPort(localIP, "5001")
 
 		h := server.Default(
 			server.WithHostPorts(addr),
@@ -88,7 +88,7 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		addr := fmt.Sprintf("%s:%d", localIP, 5002)
+		addr := net.JoinHostPort(localIP, "5002")
 		h := server.Default(
 			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{

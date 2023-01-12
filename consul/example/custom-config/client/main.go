@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/client"
@@ -97,7 +98,7 @@ func discoveryWithCustomizedAddr(r discovery.Resolver) {
 		panic(err)
 	}
 
-	cli.Use(sd.Discovery(r, sd.WithCustomizedAddrs(fmt.Sprintf("%s:5001", localIP))))
+	cli.Use(sd.Discovery(r, sd.WithCustomizedAddrs(net.JoinHostPort(localIP, "5001"))))
 	for i := 0; i < 10; i++ {
 		status, body, err := cli.Get(context.Background(), nil, "http://custom-config-demo/ping", config.WithSD(true), config.WithTag("key1", "val1"))
 		if err != nil {

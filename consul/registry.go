@@ -23,6 +23,18 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+const (
+	DefaultCheckInterval                       = "5s"
+	DefaultCheckTimeout                        = "5s"
+	DefaultCheckDeregisterCriticalServiceAfter = "1m"
+)
+
+var (
+	ErrNilInfo            = errors.New("info is nil")
+	ErrMissingServiceName = errors.New("missing service name in consul register")
+	ErrMissingAddr        = errors.New("missing addr in consul register")
+)
+
 type consulRegistry struct {
 	consulClient *api.Client
 	opts         options
@@ -57,8 +69,7 @@ func NewConsulRegister(consulClient *api.Client, opts ...Option) registry.Regist
 
 // Register register a service to consul.
 func (c *consulRegistry) Register(info *registry.Info) error {
-	err := validateRegistryInfo(info)
-	if err != nil {
+	if err := validateRegistryInfo(info); err != nil {
 		return fmt.Errorf("validating registry info failed, err: %w", err)
 	}
 
@@ -109,22 +120,22 @@ func (c *consulRegistry) Deregister(info *registry.Info) error {
 
 func defaultCheck() *api.AgentServiceCheck {
 	check := new(api.AgentServiceCheck)
-	check.Timeout = "5s"
-	check.Interval = "5s"
-	check.DeregisterCriticalServiceAfter = "1m"
+	check.Timeout = DefaultCheckTimeout
+	check.Interval = DefaultCheckInterval
+	check.DeregisterCriticalServiceAfter = DefaultCheckDeregisterCriticalServiceAfter
 
 	return check
 }
 
 func validateRegistryInfo(info *registry.Info) error {
 	if info == nil {
-		return errors.New("info is nil")
+		return ErrNilInfo
 	}
 	if info.ServiceName == "" {
-		return errors.New("missing service name in consul register")
+		return ErrMissingServiceName
 	}
 	if info.Addr == nil {
-		return errors.New("missing addr in consul register")
+		return ErrMissingAddr
 	}
 
 	return nil

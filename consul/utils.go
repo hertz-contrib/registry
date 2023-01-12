@@ -20,7 +20,6 @@ import (
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 )
 
 func parseAddr(addr net.Addr) (host string, port int, err error) {
@@ -30,7 +29,7 @@ func parseAddr(addr net.Addr) (host string, port int, err error) {
 	}
 
 	if host == "" || host == "::" {
-		host = utils.LocalIP()
+		return "", 0, fmt.Errorf("empty host")
 	}
 
 	port, err = strconv.Atoi(portStr)

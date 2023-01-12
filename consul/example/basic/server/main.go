@@ -17,19 +17,22 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"sync"
-
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	consulapi "github.com/hashicorp/consul/api"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hertz-contrib/registry/consul"
 )
 
-var wg sync.WaitGroup
+var (
+	wg      sync.WaitGroup
+	localIP = "your ip"
+)
 
 func main() {
 	config := consulapi.DefaultConfig()
@@ -43,7 +46,7 @@ func main() {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8888"
+		addr := net.JoinHostPort(localIP, "8888")
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
 			server.WithHostPorts(addr),
@@ -62,7 +65,7 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8889"
+		addr := net.JoinHostPort(localIP, "8889")
 		r := consul.NewConsulRegister(consulClient)
 		h := server.Default(
 			server.WithHostPorts(addr),

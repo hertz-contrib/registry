@@ -16,8 +16,9 @@ package main
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app/client"
+	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -28,10 +29,6 @@ import (
 )
 
 func main() {
-	cli, err := client.NewClient()
-	if err != nil {
-		panic(err)
-	}
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig("127.0.0.1", 8848),
 	}
@@ -43,7 +40,6 @@ func main() {
 		CacheDir:            "/tmp/nacos/cache",
 		LogLevel:            "info",
 	}
-
 	nacosCli, err := clients.NewNamingClient(
 		vo.NacosClientParam{
 			ClientConfig:  &cc,
@@ -53,6 +49,15 @@ func main() {
 		panic(err)
 	}
 	r := nacos.NewNacosResolver(nacosCli)
+	discoveryWithSD(r)
+}
+
+func discoveryWithSD(r discovery.Resolver) {
+	fmt.Println("simply discovery:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
 	cli.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
 		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))

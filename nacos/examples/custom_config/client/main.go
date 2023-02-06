@@ -60,7 +60,7 @@ func discoveryWithSD(r discovery.Resolver) {
 	}
 	cli.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.custom-config.demo/ping", config.WithSD(true))
 		if err != nil {
 			hlog.Fatal(err)
 		}

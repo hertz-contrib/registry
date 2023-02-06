@@ -28,6 +28,16 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/vo"
 )
 
+import (
+	"sync"
+)
+
+var (
+	wg        sync.WaitGroup
+	server1IP = "127.0.0.1:8088"
+	server2IP = "127.0.0.1:8089"
+)
+
 func main() {
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig("127.0.0.1", 8848),
@@ -51,19 +61,43 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	addr := "127.0.0.1:8888"
+	wg.Add(2)
 	r := nacos.NewNacosRegistry(cli)
-	h := server.Default(
-		server.WithHostPorts(addr),
-		server.WithRegistry(r, &registry.Info{
-			ServiceName: "hertz.test.demo",
-			Addr:        utils.NewNetAddr("tcp", addr),
-			Weight:      10,
-			Tags:        nil,
-		}))
-	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong"})
-	})
-	h.Spin()
+	go func() {
+		defer wg.Done()
+		h := server.Default(
+			server.WithHostPorts(server1IP),
+			server.WithRegistry(r, &registry.Info{
+				ServiceName: "hertz.test.demo",
+				Addr:        utils.NewNetAddr("tcp", server1IP),
+				Weight:      10,
+				Tags: map[string]string{
+					"key1": "val1",
+				},
+			}))
+		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(consts.StatusOK, utils.H{"ping1": "pong1"})
+		})
+		h.Spin()
+	}()
+
+	go func() {
+		defer wg.Done()
+		h := server.Default(
+			server.WithHostPorts(server2IP),
+			server.WithRegistry(r, &registry.Info{
+				ServiceName: "hertz.test.demo",
+				Addr:        utils.NewNetAddr("tcp", server2IP),
+				Weight:      10,
+				Tags: map[string]string{
+					"key2": "val2",
+				},
+			}))
+		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(consts.StatusOK, utils.H{"ping2": "pong2"})
+		})
+		h.Spin()
+
+	}()
+	wg.Wait()
 }

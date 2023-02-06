@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
+	"github.com/cloudwego/hertz/pkg/app/client/loadbalance"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -26,6 +27,7 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
+	"time"
 )
 
 func main() {
@@ -49,7 +51,11 @@ func main() {
 		panic(err)
 	}
 	r := nacos.NewNacosResolver(nacosCli)
+
 	discoveryWithSD(r)
+	discoveryWithTag(r)
+	discoveryWithCustomizedAddr(r)
+	discoveryWithLoadBalanceOptions(r)
 }
 
 func discoveryWithSD(r discovery.Resolver) {
@@ -59,6 +65,60 @@ func discoveryWithSD(r discovery.Resolver) {
 		panic(err)
 	}
 	cli.Use(sd.Discovery(r))
+	for i := 0; i < 10; i++ {
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.custom-config.demo/ping", config.WithSD(true))
+		if err != nil {
+			hlog.Fatal(err)
+		}
+		hlog.Infof("code=%d,body=%s", status, string(body))
+	}
+}
+
+func discoveryWithTag(r discovery.Resolver) {
+	fmt.Println("discovery with tag:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	cli.Use(sd.Discovery(r))
+	for i := 0; i < 10; i++ {
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.custom-config.demo/ping",
+			config.WithSD(true),
+			config.WithTag("key1", "val1"))
+		if err != nil {
+			hlog.Fatal(err)
+		}
+		hlog.Infof("code=%d,body=%s", status, string(body))
+	}
+}
+
+func discoveryWithCustomizedAddr(r discovery.Resolver) {
+	fmt.Println("discovery with customizedAddr:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
+
+	cli.Use(sd.Discovery(r, sd.WithCustomizedAddrs("127.0.0.1:8088")))
+	for i := 0; i < 10; i++ {
+		status, body, err := cli.Get(context.Background(), nil, "http://hertz.custom-config.demo/ping", config.WithSD(true))
+		if err != nil {
+			hlog.Fatal(err)
+		}
+		hlog.Infof("code=%d,body=%s", status, string(body))
+	}
+}
+
+func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
+	fmt.Println("discovery with loadBalanceOptions:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	cli.Use(sd.Discovery(r, sd.WithLoadBalanceOptions(loadbalance.NewWeightedBalancer(), loadbalance.Options{
+		RefreshInterval: 5 * time.Second,
+		ExpireInterval:  15 * time.Second,
+	})))
 	for i := 0; i < 10; i++ {
 		status, body, err := cli.Get(context.Background(), nil, "http://hertz.custom-config.demo/ping", config.WithSD(true))
 		if err != nil {

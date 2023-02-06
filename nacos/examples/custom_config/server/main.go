@@ -38,6 +38,11 @@ var (
 	server2IP = "127.0.0.1:8089"
 )
 
+type Message struct {
+	Message string `json:"message"`
+	Name    string `json:"name"`
+}
+
 func main() {
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig("127.0.0.1", 8848),
@@ -75,9 +80,19 @@ func main() {
 					"key1": "val1",
 				},
 			}))
+
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 			ctx.JSON(consts.StatusOK, utils.H{"ping1": "pong1"})
 		})
+		h.POST("/hello", func(c context.Context, ctx *app.RequestContext) {
+			message := Message{}
+			if err := ctx.Bind(&message); err != nil {
+				ctx.String(consts.StatusBadRequest, err.Error())
+				return
+			}
+			ctx.JSON(consts.StatusOK, message)
+		})
+
 		h.Spin()
 	}()
 
@@ -95,6 +110,15 @@ func main() {
 			}))
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 			ctx.JSON(consts.StatusOK, utils.H{"ping2": "pong2"})
+		})
+
+		h.POST("/hello", func(c context.Context, ctx *app.RequestContext) {
+			message := Message{}
+			if err := ctx.Bind(&message); err != nil {
+				ctx.String(consts.StatusBadRequest, err.Error())
+				return
+			}
+			ctx.JSON(consts.StatusOK, message)
 		})
 		h.Spin()
 

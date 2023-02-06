@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
@@ -23,12 +24,18 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/protocol"
 	"github.com/hertz-contrib/registry/nacos"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"time"
 )
+
+type Message struct {
+	Message string `json:"message"`
+	Name    string `json:"name"`
+}
 
 func main() {
 	sc := []constant.ServerConfig{
@@ -56,6 +63,7 @@ func main() {
 	discoveryWithTag(r)
 	discoveryWithCustomizedAddr(r)
 	discoveryWithLoadBalanceOptions(r)
+	discoveryThenUsePostMethod(r)
 }
 
 func discoveryWithSD(r discovery.Resolver) {
@@ -126,4 +134,32 @@ func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
 		}
 		hlog.Infof("code=%d,body=%s", status, string(body))
 	}
+}
+
+func discoveryThenUsePostMethod(r discovery.Resolver) {
+	fmt.Println("discovery and use post method to send request:")
+	cli, err := client.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	cli.Use(sd.Discovery(r))
+
+	// set request config、method、request uri.
+	req := protocol.AcquireRequest()
+	req.SetOptions(config.WithSD(true))
+	req.SetMethod("POST")
+	req.SetRequestURI("http://hertz.custom-config.demo/hello")
+	message := Message{Message: "hello", Name: "a handsome man"}
+	bytes, _ := json.Marshal(message)
+	// set body and content type
+	req.SetBody(bytes)
+	req.Header.SetContentTypeBytes([]byte("application/json"))
+	resp := protocol.AcquireResponse()
+	// send request
+	err = cli.Do(context.Background(), req, resp)
+	if err != nil {
+		hlog.Fatal(err)
+	}
+	hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
+
 }

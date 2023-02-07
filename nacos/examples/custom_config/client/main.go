@@ -17,7 +17,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/client/loadbalance"
@@ -67,7 +66,7 @@ func main() {
 }
 
 func discoveryWithSD(r discovery.Resolver) {
-	fmt.Println("simply discovery:")
+	hlog.Info("simply discovery:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -83,7 +82,7 @@ func discoveryWithSD(r discovery.Resolver) {
 }
 
 func discoveryWithTag(r discovery.Resolver) {
-	fmt.Println("discovery with tag:")
+	hlog.Info("discovery with tag:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -101,7 +100,7 @@ func discoveryWithTag(r discovery.Resolver) {
 }
 
 func discoveryWithCustomizedAddr(r discovery.Resolver) {
-	fmt.Println("discovery with customizedAddr:")
+	hlog.Info("discovery with customizedAddr:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -118,7 +117,7 @@ func discoveryWithCustomizedAddr(r discovery.Resolver) {
 }
 
 func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
-	fmt.Println("discovery with loadBalanceOptions:")
+	hlog.Info("discovery with loadBalanceOptions:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -137,7 +136,7 @@ func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
 }
 
 func discoveryThenUsePostMethod(r discovery.Resolver) {
-	fmt.Println("discovery and use post method to send request:")
+	hlog.Info("discovery and use post method to send request:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)

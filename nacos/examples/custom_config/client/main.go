@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/client/loadbalance"

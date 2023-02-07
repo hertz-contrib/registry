@@ -121,7 +121,6 @@ func main() {
 			ctx.JSON(consts.StatusOK, message)
 		})
 		h.Spin()
-
 	}()
 	wg.Wait()
 }

@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
@@ -29,7 +30,6 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
-	"time"
 )
 
 type Message struct {
@@ -161,5 +161,4 @@ func discoveryThenUsePostMethod(r discovery.Resolver) {
 		hlog.Fatal(err)
 	}
 	hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
-
 }

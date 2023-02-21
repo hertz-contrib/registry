@@ -1,0 +1,36 @@
+---
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /consul
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /etcd
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /eureka
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /nacos
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /polaris
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /redis
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /servicecomb
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /zookeeper
+    schedule:
+      interval: weekly
+

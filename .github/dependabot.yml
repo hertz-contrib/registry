@@ -5,37 +5,37 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: gomod
     directory: /consul
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /etcd
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /eureka
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /nacos
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /polaris
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /redis
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /servicecomb
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: gomod
     directory: /zookeeper
     schedule:
-      interval: weekly
+      interval: monthly
 

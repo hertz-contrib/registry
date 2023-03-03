@@ -15,16 +15,15 @@
 package zookeeper
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
-	"strings"
-	"time"
-
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-zookeeper/zk"
+	"net"
+	"strings"
+	"time"
 )
 
 const (
@@ -51,7 +50,7 @@ func (z *zookeeperRegistry) Register(info *registry.Info) error {
 	if err != nil {
 		return err
 	}
-	content, err := json.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
+	content, err := sonic.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
 	if err != nil {
 		return err
 	}

@@ -16,13 +16,12 @@ package zookeeper
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
-
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/go-zookeeper/zk"
+	"strings"
+	"time"
 )
 
 type zookeeperResolver struct {
@@ -52,11 +51,11 @@ func NewZookeeperResolverWithAuth(servers []string, sessionTimeout time.Duration
 	return &zookeeperResolver{conn: conn}, nil
 }
 
-func (z *zookeeperResolver) Target(ctx context.Context, target *discovery.TargetInfo) string {
+func (z *zookeeperResolver) Target(_ context.Context, target *discovery.TargetInfo) string {
 	return target.Host
 }
 
-func (z *zookeeperResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
+func (z *zookeeperResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
 	path := desc
 	if !strings.HasPrefix(path, Separator) {
 		path = Separator + path
@@ -100,7 +99,7 @@ func (z *zookeeperResolver) detailEndPoints(path, ep string) (discovery.Instance
 		return nil, err
 	}
 	en := new(RegistryEntity)
-	err = json.Unmarshal(data, en)
+	err = sonic.Unmarshal(data, en)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal data [%s] error, cause %w", data, err)
 	}

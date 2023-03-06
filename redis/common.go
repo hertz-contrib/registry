@@ -18,10 +18,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/bytedance/sonic"
 	"net"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/go-redis/redis/v8"
 )

@@ -17,8 +17,8 @@ package redis
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"net"
 	"time"
 
@@ -116,7 +116,7 @@ func generateMsg(msgType, serviceName, serviceAddr string) string {
 }
 
 func prepareRegistryHash(info *registry.Info) (*registryHash, error) {
-	meta, err := json.Marshal(convertInfo(info))
+	meta, err := sonic.Marshal(convertInfo(info))
 	if err != nil {
 		return nil, err
 	}

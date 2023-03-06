@@ -17,13 +17,14 @@ package zookeeper
 import (
 	"errors"
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-zookeeper/zk"
-	"net"
-	"strings"
-	"time"
 )
 
 const (

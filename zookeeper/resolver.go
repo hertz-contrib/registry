@@ -17,11 +17,12 @@ package zookeeper
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/go-zookeeper/zk"
-	"strings"
-	"time"
 )
 
 type zookeeperResolver struct {

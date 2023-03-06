@@ -18,15 +18,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hudl/fargo"
-	"net"
-	"strconv"
-	"sync"
-	"time"
 )
 
 const (

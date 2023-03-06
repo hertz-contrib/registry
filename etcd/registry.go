@@ -16,12 +16,13 @@ package etcd
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"sync"
-	"time"
 )
 
 var _ registry.Registry = (*etcdRegistry)(nil)

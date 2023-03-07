@@ -17,11 +17,11 @@ package redis
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/go-redis/redis/v8"
 )
@@ -116,7 +116,7 @@ func generateMsg(msgType, serviceName, serviceAddr string) string {
 }
 
 func prepareRegistryHash(info *registry.Info) (*registryHash, error) {
-	meta, err := json.Marshal(convertInfo(info))
+	meta, err := sonic.Marshal(convertInfo(info))
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,6 @@ package eureka
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -24,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
@@ -195,7 +195,7 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 		info.Weight = registry.DefaultWeight
 	}
 
-	meta, err := json.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
+	meta, err := sonic.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
 	if err != nil {
 		return nil, err
 	}

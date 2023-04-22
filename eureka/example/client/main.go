@@ -21,7 +21,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/hertz-contrib/eureka"
+	"github.com/hertz-contrib/registry/eureka"
 )
 
 func main() {

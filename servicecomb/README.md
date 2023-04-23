@@ -47,7 +47,6 @@ func main() {
 }
 ```
 
-
 ### Client
 
 ```go
@@ -64,7 +63,7 @@ import (
 
 func main() {
     const scAddr = "127.0.0.1:30100"
-	// build a servicecomb resolver 
+	// build a servicecomb resolver
 	r, err := servicecomb.NewDefaultSCResolver([]string{scAddr})
 	if err != nil {
 		panic(err)
@@ -89,10 +88,13 @@ func main() {
 ## Example
 
 ### Run Server
-[Server](./example/server/main.go)
+
+[Server](./example/basic/server/main.go)
+
 ```shell
-go run ./example/server/main.go
+go run ./example/basic/server/main.go
 ```
+
 ```log
 2022/08/26 17:23:27 INFO: Use Service center v4
 2022/08/26 17:23:27 INFO: Use Service center v4
@@ -103,10 +105,13 @@ go run ./example/server/main.go
 ```
 
 ### Run Client
-[Client](./example/client/main.go)
+
+[Client](./example/basic/client/main.go)
+
 ```shell
-go run ./example/client/main.go
+go run ./example/basic/client/main.go
 ```
+
 ```log
 2022/08/26 17:24:03 INFO: Use Service center v4
 2022/08/26 17:24:03 DEBUG: service center has new revision 9fc77257754eca927c1ff189b083e6c4eb79dbff
@@ -121,7 +126,6 @@ go run ./example/client/main.go
 2022/08/26 17:24:03.415801 main.go:46: [Info] code=200,body={"ping":"pong2"}
 2022/08/26 17:24:03.416111 main.go:46: [Info] code=200,body={"ping":"pong2"}
 ```
-
 
 ## Compatibility
 

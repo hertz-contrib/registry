@@ -1,4 +1,4 @@
-module github.com/hertz-contrib/eureka
+module github.com/hertz-contrib/registry/eureka
 
 go 1.16
 

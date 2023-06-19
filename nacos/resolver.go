@@ -17,7 +17,9 @@ package nacos
 import (
 	"context"
 	"net"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/hertz-contrib/registry/nacos/common"
@@ -57,12 +59,43 @@ func WithResolverGroup(group string) ResolverOption {
 }
 
 func (n *nacosResolver) Target(_ context.Context, target *discovery.TargetInfo) string {
-	return target.Host
+	var metadata strings.Builder
+
+	// Set serviceName and metadata to desc
+	tags := target.Tags
+	if len(tags) == 0 {
+		return target.Host
+	}
+
+	metadata.WriteString(target.Host)
+	metadata.WriteString("?")
+	values := url.Values{}
+	for k, v := range tags {
+		values.Add(k, v)
+	}
+	metadata.WriteString(values.Encode())
+	return metadata.String()
 }
 
 func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
+	var metadata map[string]string
+	serviceName := desc
+
+	// Get serviceName and metadata from desc
+	if strings.Contains(desc, "?") {
+		queries, _ := url.Parse(desc)
+		tags, _ := url.ParseQuery(queries.Query().Encode())
+
+		result := make(map[string]string)
+		for key, value := range tags {
+			result[key] = value[0]
+		}
+		metadata = result
+		serviceName = strings.Split(desc, "?")[0]
+	}
+
 	res, err := n.client.SelectInstances(vo.SelectInstancesParam{
-		ServiceName: desc,
+		ServiceName: serviceName,
 		HealthyOnly: true,
 		GroupName:   n.opts.group,
 		Clusters:    []string{n.opts.cluster},
@@ -70,18 +103,18 @@ func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Resul
 	if err != nil {
 		return discovery.Result{}, err
 	}
-
 	instances := make([]discovery.Instance, 0, len(res))
-	for _, in := range res {
-		if !in.Enable {
+	for _, ins := range res {
+		if !ins.Enable || !compareMaps(ins.Metadata, metadata) {
 			continue
 		}
-		formatPort := strconv.FormatUint(in.Port, 10)
+
+		formatPort := strconv.FormatUint(ins.Port, 10)
 		instances = append(instances,
 			discovery.NewInstance(
 				"tcp",
-				net.JoinHostPort(in.Ip, formatPort),
-				int(in.Weight), in.Metadata,
+				net.JoinHostPort(ins.Ip, formatPort),
+				int(ins.Weight), ins.Metadata,
 			),
 		)
 	}
@@ -115,4 +148,24 @@ func NewNacosResolver(cli naming_client.INamingClient, opts ...ResolverOption) d
 		option(&opt)
 	}
 	return &nacosResolver{client: cli, opts: opt}
+}
+
+// compareMaps compares two maps regardless of nil or empty
+func compareMaps(m1, m2 map[string]string) bool {
+	// if both maps are nil, they are equal
+	if m1 == nil && m2 == nil {
+		return true
+	}
+	// if the lengths are different, the maps are not equal
+	if len(m1) != len(m2) {
+		return false
+	}
+	// iterate over the keys of m1 and check if they exist in m2 with the same value
+	for k, v := range m1 {
+		if v2, ok := m2[k]; !ok || v != v2 {
+			return false
+		}
+	}
+	// return true if no differences are found
+	return true
 }

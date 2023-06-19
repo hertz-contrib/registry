@@ -23,7 +23,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/cloudwego/hertz/pkg/app/client/loadbalance"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -361,56 +360,6 @@ func TestDefaultNacosRegistry(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-// TestHertzAppWithNacosRegistry test a client call a hertz app with NacosRegistry
-func TestHertzAppWithNacosRegistry(t *testing.T) {
-	register := NewNacosRegistry(namingClient)
-	address := "127.0.0.1:4576"
-	srvName := "demo.hertz-contrib.testing"
-	var opts []config.Option
-	opts = append(opts, server.WithHostPorts(address))
-	opts = append(opts, server.WithRegistry(register, &registry.Info{
-		ServiceName: srvName,
-		Addr:        utils.NewNetAddr("tcp", address),
-		Weight:      10,
-		Tags:        nil,
-	}))
-	// run a hertz app,registry src info into NacosRegistry
-	srv := server.New(opts...)
-	srv.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.String(200, "pong")
-	})
-	go srv.Spin()
-	// Because delayed registration, we need sleep more time.
-	time.Sleep(2 * time.Second)
-
-	// client call an url, with NacosResolver
-	newClient, _ := client.NewClient()
-	resolver := NewNacosResolver(namingClient)
-	newClient.Use(sd.Discovery(resolver, sd.WithLoadBalanceOptions(
-		loadbalance.NewWeightedBalancer(),
-		loadbalance.Options{
-			ExpireInterval:  3 * time.Second,
-			RefreshInterval: 1 * time.Second,
-		}),
-	))
-
-	status, body, err := newClient.Get(context.TODO(), nil, "http://demo.hertz-contrib.testing/ping",
-		config.WithSD(true))
-	assert.Nil(t, err)
-	assert.Equal(t, 200, status)
-	assert.Equal(t, "pong", string(body))
-
-	if err = srv.Shutdown(context.TODO()); err != nil {
-		t.Error(err)
-	}
-	time.Sleep(6 * time.Second)
-	status1, body1, err1 := newClient.Get(context.Background(), nil, "http://demo.hertz-contrib.testing/ping",
-		config.WithSD(true))
-	assert.NotNil(t, err1)
-	assert.Equal(t, 0, status1)
-	assert.Equal(t, "", string(body1))
-}
-
 // TestResolverDifferentGroup test NewResolver WithCluster option
 func TestResolverDifferentGroup(t *testing.T) {
 	var opts1 []config.Option
@@ -475,4 +424,146 @@ func TestResolverDifferentGroup(t *testing.T) {
 	assert.Nil(t, err2)
 	assert.Equal(t, 200, status2)
 	assert.Equal(t, "pong2", string(body2))
+}
+
+func TestWithTag(t *testing.T) {
+	var opts1 []config.Option
+	var opts2 []config.Option
+
+	opts1 = append(opts1, server.WithRegistry(NewNacosRegistry(namingClient), &registry.Info{
+		ServiceName: "demo.hertz-contrib.test1",
+		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:7512"),
+		Weight:      10,
+		Tags:        map[string]string{"key1": "value1"},
+	}))
+	opts1 = append(opts1, server.WithHostPorts("127.0.0.1:7512"))
+	srv1 := server.New(opts1...)
+	srv1.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.String(200, "pong1")
+	})
+
+	opts2 = append(opts2, server.WithRegistry(NewNacosRegistry(namingClient), &registry.Info{
+		ServiceName: "demo.hertz-contrib.test1",
+		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:7074"),
+		Weight:      10,
+		Tags:        map[string]string{"key2": "value2"},
+	}))
+	opts2 = append(opts2, server.WithHostPorts("127.0.0.1:7074"))
+	srv2 := server.New(opts2...)
+	srv2.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.String(200, "pong2")
+	})
+
+	go srv1.Spin()
+	go srv2.Spin()
+
+	time.Sleep(2 * time.Second)
+
+	cli, _ := client.NewClient()
+	r := NewNacosResolver(namingClient)
+	cli.Use(sd.Discovery(r))
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancelFunc()
+
+	status, body, err := cli.Get(ctx, nil,
+		"http://demo.hertz-contrib.test1/ping",
+		config.WithSD(true),
+		config.WithTag("key1", "value1"),
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, "pong1", string(body))
+}
+
+// TestCompareMaps tests the compareMaps function
+func TestCompareMaps(t *testing.T) {
+	// create some test cases with expected results
+	testCases := []struct {
+		m1, m2 map[string]string
+		want   bool
+	}{
+		{
+			m1:   map[string]string{"a": "1", "b": "2", "c": "3"},
+			m2:   map[string]string{"a": "1", "b": "2", "c": "3"},
+			want: true,
+		},
+		{
+			m1:   map[string]string{"a": "1", "b": "2", "c": "3"},
+			m2:   map[string]string{"a": "1", "b": "2", "d": "3"},
+			want: false,
+		},
+		{
+			m1:   map[string]string{"a": "1", "b": "2", "c": "3"},
+			m2:   map[string]string{"a": "1", "b": "2", "c": "4"},
+			want: false,
+		},
+		{
+			m1:   map[string]string{"a": "1", "b": "2"},
+			m2:   map[string]string{"a": "1", "b": "2", "c": "3"},
+			want: false,
+		},
+		{
+			m1:   nil,
+			m2:   nil,
+			want: true,
+		},
+		{
+			m1:   nil,
+			m2:   make(map[string]string),
+			want: true,
+		},
+	}
+	// iterate over the test cases and check if the function returns the expected result
+	for _, tc := range testCases {
+		got := compareMaps(tc.m1, tc.m2)
+		if got != tc.want {
+			t.Errorf("compareMaps(%v, %v) = %v, want %v", tc.m1, tc.m2, got, tc.want)
+		}
+	}
+}
+
+// TestHertzAppWithNacosRegistry test a client call a hertz app with NacosRegistry
+func TestHertzAppWithNacosRegistry(t *testing.T) {
+	register := NewNacosRegistry(namingClient)
+	address := "127.0.0.1:4576"
+	srvName := "d.h.t"
+	var opts []config.Option
+	opts = append(opts, server.WithHostPorts(address), server.WithExitWaitTime(2*time.Second))
+	opts = append(opts, server.WithRegistry(register, &registry.Info{
+		ServiceName: srvName,
+		Addr:        utils.NewNetAddr("tcp", address),
+		Weight:      10,
+		Tags:        nil,
+	}))
+	// run a hertz app,registry src info into NacosRegistry
+	srv := server.New(opts...)
+	srv.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.String(200, "pong")
+	})
+	go srv.Spin()
+	// Because delayed registration, we need sleep more time.
+	time.Sleep(2 * time.Second)
+
+	// client call an url, with NacosResolver
+	newClient, _ := client.NewClient()
+	resolver := NewNacosResolver(namingClient)
+	newClient.Use(sd.Discovery(resolver))
+
+	status, body, err := newClient.Get(context.TODO(), nil, "http://d.h.t/ping",
+		config.WithSD(true))
+	assert.Nil(t, err)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, "pong", string(body))
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+	srv.Shutdown(ctx) //nolint:errcheck // ignore error
+
+	time.Sleep(5 * time.Second)
+	status, body, err = newClient.Get(context.Background(), nil, "http://d.h.t/ping",
+		config.WithSD(true))
+	assert.NotNil(t, err)
+	assert.Equal(t, 0, status)
+	assert.Equal(t, "", string(body))
 }

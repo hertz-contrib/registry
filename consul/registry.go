@@ -40,10 +40,16 @@ type consulRegistry struct {
 	opts         options
 }
 
+type AdditionInfo struct {
+	Tags []string
+	Meta map[string]string
+}
+
 var _ registry.Registry = (*consulRegistry)(nil)
 
 type options struct {
-	check *api.AgentServiceCheck
+	check        *api.AgentServiceCheck
+	AdditionInfo AdditionInfo
 }
 
 // Option is the option of Consul.
@@ -52,6 +58,11 @@ type Option func(o *options)
 // WithCheck is consul registry option to set AgentServiceCheck.
 func WithCheck(check *api.AgentServiceCheck) Option {
 	return func(o *options) { o.check = check }
+}
+
+// WithAdditionInfo is consul registry option to set AdditionInfo.
+func WithAdditionInfo(info *AdditionInfo) Option {
+	return func(o *options) { o.AdditionInfo = *info }
 }
 
 // NewConsulRegister create a new registry using consul.
@@ -88,7 +99,8 @@ func (c *consulRegistry) Register(info *registry.Info) error {
 		Name:    info.ServiceName,
 		Address: host,
 		Port:    port,
-		Meta:    info.Tags,
+		Tags:    c.opts.AdditionInfo.Tags,
+		Meta:    c.opts.AdditionInfo.Meta,
 		Weights: &api.AgentWeights{
 			Passing: info.Weight,
 			Warning: info.Weight,

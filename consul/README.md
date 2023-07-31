@@ -51,7 +51,6 @@ func main() {
 			ServiceName: "hertz.test.demo",
 			Addr:        utils.NewNetAddr("tcp", addr),
 			Weight:      10,
-			Tags:        nil,
 		}),
 	)
 	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
@@ -61,9 +60,11 @@ func main() {
 }
 ```
 
-#### Customize Service Check
+#### Customize
 
-registry has a default config for service check as below
+Consul extension provides custom configuration of service inspection and `Tags` `Meta` field.
+
+Registry has a default config for service check as below
 
 ```
 check.Timeout = "5s"
@@ -71,7 +72,7 @@ check.Interval = "5s"
 check.DeregisterCriticalServiceAfter = "1m"
 ```
 
-you can also use `WithCheck` to modify your config
+You can use `WithCheck` to modify the configuration of the service check. At the same time, you can also use `WithAdditionInfo` to modify the `Meta` `Tags` field of the service.
 
 ```golang
 package main
@@ -98,7 +99,18 @@ func main() {
 	check.Timeout = "10s"
 	check.Interval = "10s"
 	check.DeregisterCriticalServiceAfter = "1m"
-	r := consul.NewConsulRegister(consulClient, consul.WithCheck(check))
+
+	// custom addition info
+	additionInfo := &consul.AdditionInfo{
+		Tags: []string{"tag1", "tag2"},
+		Meta: map[string]string{
+			"meta1": "val1",
+			"meta2": "val2",
+		},
+	}
+	r := consul.NewConsulRegister(consulClient,
+		consul.WithCheck(check), consul.WithAdditionInfo(additionInfo),
+	)
 }
 
 ```

@@ -8,7 +8,7 @@ jobs:
 
     services:
       consul:
-        image: 'consul:latest'
+        image: 'consul:1.13.0'
         ports:
           - '8500:8500'
       polaris:

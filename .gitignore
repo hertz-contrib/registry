@@ -17,6 +17,7 @@
 # IDE config
 .vscode
 .idea
+.DS_Store
 
 # polaris cache
 /polaris/polaris

@@ -7,7 +7,6 @@ require (
 	github.com/go-chassis/cari v0.9.0
 	github.com/go-chassis/sc-client v0.7.1-0.20220829010936-e0ff6c891c04
 	github.com/stretchr/testify v1.8.2
-	github.com/thoas/go-funk v0.9.3
 )
 
 require (

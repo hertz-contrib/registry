@@ -34,7 +34,7 @@ const (
 	nacosDefaultRegionID   = "cn-hangzhou"
 )
 
-// NewDefaultNacosConfig create a default Nacos client.
+// NewDefaultNacosConfig create a basic Nacos client.
 func NewDefaultNacosConfig() (naming_client.INamingClient, error) {
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig(NacosAddr(), uint64(NacosPort())),

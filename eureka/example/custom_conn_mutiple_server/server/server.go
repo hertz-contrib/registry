@@ -16,48 +16,43 @@ package main
 
 import (
 	"context"
-	"github.com/go-chassis/sc-client"
-	"sync"
-	"time"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/hertz-contrib/registry/servicecomb"
+	"github.com/hertz-contrib/registry/eureka"
+	"github.com/hudl/fargo"
+	"net"
+	"sync"
+	"time"
 )
 
 var wg sync.WaitGroup
 
-type Example struct {
-	A int `json:"a"`
-	B int `json:"b"`
+type Message struct {
+	Message string `json:"message"`
 }
 
-const scAddr = "127.0.0.1:30100"
-
 func main() {
-	// custom config
-	scClient, err := sc.NewClient(sc.Options{
-		Endpoints:  []string{scAddr},
-		Timeout:    5 * time.Second,
-		Compressed: true,
-	})
-	if err != nil {
-		panic(err)
+	// custom eurekaConn
+	conn := fargo.EurekaConnection{
+		ServiceUrls:  []string{"http://127.0.0.1:8761/eureka"},
+		Timeout:      10 * time.Second,
+		Retries:      3,
+		PollInterval: 30 * time.Second,
 	}
-
-	r := servicecomb.NewSCRegistry(scClient)
+	r := eureka.NewEurekaRegistryFromConn(conn, 40*time.Second)
 
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8701"
+		addr := net.JoinHostPort("127.0.0.1", "5001")
+
 		h := server.Default(
 			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "custom_config_mutiple_server-demo",
+				ServiceName: "hertz.discovery.eureka",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags: map[string]string{
@@ -65,29 +60,29 @@ func main() {
 				},
 			}),
 		)
-
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong"})
 		})
 
-		h.POST("/ping", func(c context.Context, ctx *app.RequestContext) {
-			e := Example{}
-			if err := ctx.Bind(&e); err != nil {
+		h.POST("ping", func(c context.Context, ctx *app.RequestContext) {
+			m := Message{}
+			if err := ctx.Bind(&m); err != nil {
 				ctx.String(consts.StatusBadRequest, err.Error())
 				return
 			}
-			ctx.JSON(consts.StatusOK, e)
+			ctx.JSON(consts.StatusOK, m)
 		})
 		h.Spin()
 	}()
 
 	go func() {
 		defer wg.Done()
-		addr := "127.0.0.1:8702"
+		addr := net.JoinHostPort("127.0.0.1", "5002")
+
 		h := server.Default(
 			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "custom_config_mutiple_server-demo",
+				ServiceName: "hertz.discovery.eureka",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags: map[string]string{
@@ -95,18 +90,17 @@ func main() {
 				},
 			}),
 		)
-
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong1"})
+			ctx.JSON(consts.StatusOK, utils.H{"ping": "pong"})
 		})
 
-		h.POST("/ping", func(c context.Context, ctx *app.RequestContext) {
-			e := Example{}
-			if err := ctx.Bind(&e); err != nil {
+		h.POST("ping", func(c context.Context, ctx *app.RequestContext) {
+			m := Message{}
+			if err := ctx.Bind(&m); err != nil {
 				ctx.String(consts.StatusBadRequest, err.Error())
 				return
 			}
-			ctx.JSON(consts.StatusOK, e)
+			ctx.JSON(consts.StatusOK, m)
 		})
 		h.Spin()
 	}()

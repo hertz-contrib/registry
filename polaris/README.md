@@ -28,7 +28,7 @@ const (
 	confPath  = "polaris.yaml"
 	Namespace = "Polaris"
 	// At present,polaris server tag is v1.4.0，can't support auto create namespace,
-	// If you want to use a namespace other than default,Polaris ,before you register an instance,
+	// If you want to use a namespace other than basic,Polaris ,before you register an instance,
 	// you should create the namespace at polaris console first.
 )
 
@@ -75,7 +75,7 @@ const (
 	confPath  = "polaris.yaml"
 	Namespace = "Polaris"
 	// At present,polaris server tag is v1.4.0，can't support auto create namespace,
-	// if you want to use a namespace other than default,Polaris ,before you register an instance,
+	// if you want to use a namespace other than basic,Polaris ,before you register an instance,
 	// you should create the namespace at polaris console first.
 )
 

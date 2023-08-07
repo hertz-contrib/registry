@@ -141,7 +141,7 @@ func (n *nacosRegistry) Deregister(info *registry.Info) error {
 	return nil
 }
 
-// NewDefaultNacosRegistry create a default service registry using nacos.
+// NewDefaultNacosRegistry create a basic service registry using nacos.
 func NewDefaultNacosRegistry(opts ...RegistryOption) (registry.Registry, error) {
 	client, err := common.NewDefaultNacosConfig()
 	if err != nil {

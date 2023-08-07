@@ -64,7 +64,7 @@ func main() {
 		h := server.Default(
 			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "custom-config-demo",
+				ServiceName: "custom_config_mutiple_server-demo",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags: map[string]string{
@@ -92,7 +92,7 @@ func main() {
 		h := server.Default(
 			server.WithHostPorts(addr),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "custom-config-demo",
+				ServiceName: "custom_config_mutiple_server-demo",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
 				Tags: map[string]string{

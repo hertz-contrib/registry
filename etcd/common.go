@@ -63,7 +63,7 @@ func validateRegistryInfo(info *registry.Info) error {
 	return nil
 }
 
-// getTTL get the lease from default or from the env
+// getTTL get the lease from basic or from the env
 func getTTL() int64 {
 	var ttl int64 = defaultTTL
 	if str, ok := os.LookupEnv(ttlKey); ok {

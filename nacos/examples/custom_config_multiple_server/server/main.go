@@ -73,7 +73,7 @@ func main() {
 		h := server.Default(
 			server.WithHostPorts(server1IP),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "hertz.custom-config.demo",
+				ServiceName: "hertz.custom_config_mutiple_server.demo",
 				Addr:        utils.NewNetAddr("tcp", server1IP),
 				Weight:      10,
 				Tags: map[string]string{
@@ -101,7 +101,7 @@ func main() {
 		h := server.Default(
 			server.WithHostPorts(server2IP),
 			server.WithRegistry(r, &registry.Info{
-				ServiceName: "hertz.custom-config.demo",
+				ServiceName: "hertz.custom_config_mutiple_server.demo",
 				Addr:        utils.NewNetAddr("tcp", server2IP),
 				Weight:      10,
 				Tags: map[string]string{

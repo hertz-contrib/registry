@@ -37,7 +37,7 @@ import (
 
 var namingClient = getNamingClient()
 
-// getNamingClient use to config for naming_client by default.
+// getNamingClient use to config for naming_client by basic.
 func getNamingClient() naming_client.INamingClient {
 	// create ServerConfig
 	sc := []constant.ServerConfig{
@@ -139,7 +139,7 @@ func TestRegistryAndDeregister(t *testing.T) {
 	assert.Contains(t, err.Error(), "register instance error")
 }
 
-// TestNewDefaultResolver test new a default nacos resolver.
+// TestNewDefaultResolver test new a basic nacos resolver.
 func TestNewDefaultResolver(t *testing.T) {
 	r, err := NewDefaultNacosResolver()
 	assert.NotNil(t, r)

@@ -44,7 +44,7 @@ func main() {
 
 ### Client
 
-**[example/client/main.go](example/client/main.go)**
+**[example/client/main.go](example/basic/client/main.go)**
 
 ```go
 package main

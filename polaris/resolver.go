@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	polarisDefaultNamespace = "default"
+	polarisDefaultNamespace = "basic"
 )
 
 // Resolver is extension interface of Hertz discovery.Resolver.

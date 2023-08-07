@@ -146,7 +146,7 @@ func TestEurekaRegistryAndDeRegistry(t *testing.T) {
 	}
 }
 
-// TestEurekaRegisterWithDefaultWeight test if the default weight has been assigned to instance.
+// TestEurekaRegisterWithDefaultWeight test if the basic weight has been assigned to instance.
 func TestEurekaRegisterWithDefaultWeight(t *testing.T) {
 	info := &registry.Info{
 		ServiceName: "hertz.discovery.default_weight",

@@ -129,7 +129,7 @@ func (n *nacosResolver) Name() string {
 	return "nacos" + ":" + n.opts.cluster + ":" + n.opts.group
 }
 
-// NewDefaultNacosResolver create a default service resolver using nacos.
+// NewDefaultNacosResolver create a basic service resolver using nacos.
 func NewDefaultNacosResolver(opts ...ResolverOption) (discovery.Resolver, error) {
 	client, err := common.NewDefaultNacosConfig()
 	if err != nil {

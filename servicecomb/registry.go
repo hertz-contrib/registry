@@ -26,8 +26,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/go-chassis/cari/discovery"
-	"github.com/go-chassis/sc-client"
-	"github.com/thoas/go-funk"
 )
 
 var _ registry.Registry = (*serviceCombRegistry)(nil)
@@ -82,7 +80,7 @@ type serviceCombRegistry struct {
 	registryIns map[string]*scHeartbeat
 }
 
-// NewDefaultSCRegistry create a new default ServiceComb registry
+// NewDefaultSCRegistry create a new basic ServiceComb registry
 func NewDefaultSCRegistry(endPoints []string, opts ...RegistryOption) (registry.Registry, error) {
 	client, err := sc.NewClient(sc.Options{
 		Endpoints: endPoints,

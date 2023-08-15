@@ -18,6 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net"
+	"time"
+
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/client/loadbalance"
@@ -27,9 +31,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol"
 	"github.com/hertz-contrib/registry/eureka"
 	"github.com/hudl/fargo"
-	"log"
-	"net"
-	"time"
 )
 
 var configPath = "paht/to/your/config/file.gcfg"
@@ -51,7 +52,6 @@ func main() {
 	discoveryWithCustomizedAddr(r)
 	discoveryWithLoadBalanceOptions(r)
 	discoveryThenUsePostMethod(r)
-
 }
 
 func discoveryWithSD(r discovery.Resolver) {

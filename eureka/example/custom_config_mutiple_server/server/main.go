@@ -16,6 +16,11 @@ package main
 
 import (
 	"context"
+	"log"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -23,10 +28,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/hertz-contrib/registry/eureka"
 	"github.com/hudl/fargo"
-	"log"
-	"net"
-	"sync"
-	"time"
 )
 
 var (

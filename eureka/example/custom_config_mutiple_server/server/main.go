@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	"sync"
 	"time"
@@ -24,6 +23,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/hertz-contrib/registry/eureka"
@@ -43,7 +43,7 @@ func main() {
 	// custom config
 	eurekaConfig, err := fargo.ReadConfig(configPath)
 	if err != nil {
-		log.Fatal(err)
+		hlog.Fatal(err)
 	}
 	r := eureka.NewEurekaRegistryFromConfig(eurekaConfig, 40*time.Second)
 

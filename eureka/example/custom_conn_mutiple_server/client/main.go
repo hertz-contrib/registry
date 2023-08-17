@@ -17,7 +17,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net"
 	"time"
 
@@ -54,39 +53,58 @@ func main() {
 }
 
 func discoveryWithSD(r discovery.Resolver) {
-	fmt.Println("simply discovery:")
+	hlog.Info("simply discovery:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
 	}
 	cli.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true))
+		// set request method、config、request uri
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true))
+		req.SetMethod("GET")
+		req.SetRequestURI("http://hertz.discovery.eureka/ping")
+		// set content type
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err = cli.Do(context.Background(), req, resp)
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }
 
 func discoveryWithTag(r discovery.Resolver) {
-	fmt.Println("discovery with tag:")
+	hlog.Info("discovery with tag:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
 	}
 	cli.Use(sd.Discovery(r))
+
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true), config.WithTag("key1", "val1"))
+		// set request method、config、request uri
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true), config.WithTag("key1", "val1"))
+		req.SetMethod("GET")
+		req.SetRequestURI("http://hertz.discovery.eureka/ping")
+		// set content type
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err = cli.Do(context.Background(), req, resp)
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }
 
 func discoveryWithCustomizedAddr(r discovery.Resolver) {
-	fmt.Println("discovery with customizedAddr:")
+	hlog.Info("discovery with customizedAddr:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -94,16 +112,25 @@ func discoveryWithCustomizedAddr(r discovery.Resolver) {
 
 	cli.Use(sd.Discovery(r, sd.WithCustomizedAddrs(net.JoinHostPort("127.0.0.1", "5001"))))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true), config.WithTag("key1", "val1"))
+		// set request method、config、request uri
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true))
+		req.SetMethod("GET")
+		req.SetRequestURI("http://hertz.discovery.eureka/ping")
+		// set content type
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err = cli.Do(context.Background(), req, resp)
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }
 
 func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
-	fmt.Println("discovery with loadBalanceOptions:")
+	hlog.Info("discovery with loadBalanceOptions:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)
@@ -113,16 +140,25 @@ func discoveryWithLoadBalanceOptions(r discovery.Resolver) {
 		ExpireInterval:  15 * time.Second,
 	})))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true))
+		// set request method、config、request uri
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true))
+		req.SetMethod("GET")
+		req.SetRequestURI("http://hertz.discovery.eureka/ping")
+		// set content type
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err = cli.Do(context.Background(), req, resp)
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }
 
 func discoveryThenUsePostMethod(r discovery.Resolver) {
-	fmt.Println("discovery and use post method to send request:")
+	hlog.Info("discovery and use post method to send request:")
 	cli, err := client.NewClient()
 	if err != nil {
 		panic(err)

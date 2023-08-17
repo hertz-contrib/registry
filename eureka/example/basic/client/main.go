@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 
+	"github.com/cloudwego/hertz/pkg/protocol"
+
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
@@ -34,10 +36,19 @@ func main() {
 
 	cli.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.discovery.eureka/ping", config.WithSD(true))
+		// set request method、config、request uri
+		req := protocol.AcquireRequest()
+		req.SetOptions(config.WithSD(true))
+		req.SetMethod("GET")
+		req.SetRequestURI("http://hertz.discovery.eureka/ping")
+		// set content type
+		req.Header.SetContentTypeBytes([]byte("application/json"))
+		resp := protocol.AcquireResponse()
+		// send request
+		err = cli.Do(context.Background(), req, resp)
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s", resp.StatusCode(), string(resp.Body()))
 	}
 }

@@ -1,0 +1,5 @@
+[Eureka]
+ServiceUrls = http://127.0.0.1:8761/eureka
+ConnectTimeoutSeconds = 10
+Retries = 3
+PollIntervalSeconds = 30

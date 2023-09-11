@@ -69,10 +69,20 @@ func (r *redisRegistry) Register(info *registry.Info) error {
 	}
 	r.mu.Lock()
 	r.rctx = &rctx
-	rdb.HSet(rctx.ctx, hash.key, hash.field, hash.value)
-	rdb.Expire(rctx.ctx, hash.key, defaultExpireTime)
-	rdb.Publish(rctx.ctx, hash.key, generateMsg(register, info.ServiceName, info.Addr.String()))
 	r.mu.Unlock()
+	keys := []string{
+		hash.key,
+	}
+	args := []interface{}{
+		hash.field,
+		hash.value,
+		defaultExpireTime,
+		generateMsg(register, info.ServiceName, info.Addr.String()),
+	}
+	err = registerScript.Run(rctx.ctx, rdb, keys, args).Err()
+	if err != nil && err != redis.Nil {
+		return err
+	}
 	go m.monitorTTL(rctx.ctx, hash, info, r)
 	go keepAlive(rctx.ctx, hash, r)
 	return nil
@@ -88,10 +98,38 @@ func (r *redisRegistry) Deregister(info *registry.Info) error {
 	if err != nil {
 		return err
 	}
-	r.mu.Lock()
-	rdb.HDel(rctx.ctx, hash.key, hash.field)
-	rdb.Publish(rctx.ctx, hash.key, generateMsg(deregister, info.ServiceName, info.Addr.String()))
+	keys := []string{
+		hash.key,
+	}
+	args := []interface{}{
+		hash.field,
+		generateMsg(deregister, info.ServiceName, info.Addr.String()),
+	}
+	err = deregisterScript.Run(rctx.ctx, rdb, keys, args).Err()
+	if err != nil && err != redis.Nil {
+		return err
+	}
 	rctx.cancel()
-	r.mu.Unlock()
 	return nil
 }
+
+var registerScript = redis.NewScript(`
+local key = KEYS[1]
+local field = ARGV[1]
+local value = ARGV[2]
+local expireTime = tonumber(ARGV[3])
+local message = ARGV[4]
+
+redis.call('HSET', key, field, value)
+redis.call('EXPIRE', key, expireTime)
+redis.call('PUBLISH', key, message)
+`)
+
+var deregisterScript = redis.NewScript(`
+local key = KEYS[1]
+local field = ARGV[1]
+local message = ARGV[2]
+
+redis.call('HDEL', key, field)
+redis.call('PUBLISH', key, message)
+`)

@@ -36,7 +36,7 @@ const (
 )
 
 const (
-	defaultExpireTime    = time.Second * 60
+	defaultExpireTime    = 60
 	defaultTickerTime    = time.Second * 30
 	defaultKeepAliveTime = time.Second * 60
 	defaultMonitorTime   = time.Second * 30

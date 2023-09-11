@@ -16,8 +16,8 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/go-redis/redis/v8"
@@ -51,7 +51,7 @@ func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Res
 	var its []discovery.Instance
 	for f, v := range fvs {
 		var ri registryInfo
-		err := json.Unmarshal([]byte(v), &ri)
+		err := sonic.Unmarshal([]byte(v), &ri)
 		if err != nil {
 			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore instance Addr: %v", err, f)
 			continue

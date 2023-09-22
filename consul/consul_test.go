@@ -94,6 +94,7 @@ func TestConsulPrepared(t *testing.T) {
 
 // TestNewConsulRegister tests the NewConsulRegister function.
 func TestNewConsulRegister(t *testing.T) {
+	t.Parallel()
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr
 	cli, err := consulapi.NewClient(config)
@@ -107,6 +108,7 @@ func TestNewConsulRegister(t *testing.T) {
 
 // TestNewConsulRegisterWithCheckOption tests the NewConsulRegister function with check option.
 func TestNewConsulRegisterWithCheckOption(t *testing.T) {
+	t.Parallel()
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr
 	cli, err := consulapi.NewClient(config)
@@ -126,6 +128,7 @@ func TestNewConsulRegisterWithCheckOption(t *testing.T) {
 
 // TestNewConsulResolver tests the NewConsulResolver function .
 func TestNewConsulResolver(t *testing.T) {
+	t.Parallel()
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr
 	cli, err := consulapi.NewClient(config)
@@ -140,6 +143,7 @@ func TestNewConsulResolver(t *testing.T) {
 
 // TestConsulRegister tests the Register function with Hertz.
 func TestConsulRegister(t *testing.T) {
+	t.Parallel()
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddr
 	consulClient, err := consulapi.NewClient(config)
@@ -148,26 +152,28 @@ func TestConsulRegister(t *testing.T) {
 		return
 	}
 
+	info := &AdditionInfo{
+		Tags: []string{"tag1", "tag2", "tag3"},
+		Meta: map[string]string{
+			"meta1": "value1",
+			"meta2": "value2",
+		},
+	}
+
 	var (
 		testSvcName   = "hertz.test.demo1"
 		testSvcPort   = fmt.Sprintf("%d", 8581)
 		testSvcAddr   = net.JoinHostPort(localIpAddr, testSvcPort)
 		testSvcWeight = 777
-		metaList      = map[string]string{
-			"k1": "vv1",
-			"k2": "vv2",
-			"k3": "vv3",
-		}
 	)
 
-	r := NewConsulRegister(consulClient)
+	r := NewConsulRegister(consulClient, WithAdditionInfo(info))
 	h := server.Default(
 		server.WithHostPorts(testSvcAddr),
 		server.WithRegistry(r, &registry.Info{
 			ServiceName: testSvcName,
 			Addr:        utils.NewNetAddr("tcp", testSvcAddr),
 			Weight:      testSvcWeight,
-			Tags:        metaList,
 		}),
 	)
 
@@ -187,12 +193,14 @@ func TestConsulRegister(t *testing.T) {
 		assert.Equal(t, testSvcName, gotSvc.Service)
 		assert.Equal(t, testSvcAddr, net.JoinHostPort(gotSvc.Address, fmt.Sprintf("%d", gotSvc.Port)))
 		assert.Equal(t, testSvcWeight, gotSvc.Weights.Passing)
-		assert.Equal(t, metaList, gotSvc.Meta)
+		assert.Equal(t, info.Tags, gotSvc.Tags)
+		assert.Equal(t, info.Meta, gotSvc.Meta)
 	}
 }
 
 // TestConsulDiscovery tests the ConsulDiscovery function with Hertz.
 func TestConsulDiscovery(t *testing.T) {
+	t.Parallel()
 	consulConfig := consulapi.DefaultConfig()
 	consulConfig.Address = consulAddr
 	consulClient, err := consulapi.NewClient(consulConfig)
@@ -248,6 +256,7 @@ func TestConsulDiscovery(t *testing.T) {
 
 // TestConsulDeregister tests the Deregister function with Hertz
 func TestConsulDeregister(t *testing.T) {
+	t.Parallel()
 	consulConfig := consulapi.DefaultConfig()
 	consulConfig.Address = consulAddr
 	consulClient, err := consulapi.NewClient(consulConfig)

@@ -51,7 +51,6 @@ func main() {
 			ServiceName: "hertz.test.demo",
 			Addr:        utils.NewNetAddr("tcp", addr),
 			Weight:      10,
-			Tags:        nil,
 		}),
 	)
 	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
@@ -61,7 +60,9 @@ func main() {
 }
 ```
 
-#### 自定义服务检查
+#### 自定义配置
+
+Consul 拓展提供了服务检查与 `Tags` `Meta` 字段的自定义配置。
 
 注册中心默认配置服务检查，如下：
 
@@ -71,7 +72,7 @@ check.Interval = "5s"
 check.DeregisterCriticalServiceAfter = "1m"
 ```
 
-你也可以使用`WithCheck`来修改配置
+你也可以使用`WithCheck`来修改服务检查的配置。同时，你也可以使用`WithAdditionInfo`来修改服务的`Meta` `Tags` 字段。
 
 ```golang
 package main
@@ -98,9 +99,19 @@ func main() {
 	check.Timeout = "10s"
 	check.Interval = "10s"
 	check.DeregisterCriticalServiceAfter = "1m"
-	r := consul.NewConsulRegister(consulClient, consul.WithCheck(check))
+	
+	// custom addition info
+	additionInfo := &consul.AdditionInfo{
+		Tags: []string{"tag1", "tag2"},
+		Meta: map[string]string{
+			"meta1": "val1",
+			"meta2": "val2",
+		},
+	}
+	r := consul.NewConsulRegister(consulClient,
+		consul.WithCheck(check), consul.WithAdditionInfo(additionInfo),
+	)
 }
-
 ```
 
 ### 客户端

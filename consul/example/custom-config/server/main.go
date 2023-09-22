@@ -54,7 +54,17 @@ func main() {
 		Timeout:                        "5s",
 		DeregisterCriticalServiceAfter: "15s",
 	}
-	r := consul.NewConsulRegister(consulClient, consul.WithCheck(check))
+	// custom addition info
+	additionInfo := &consul.AdditionInfo{
+		Tags: []string{"tag1", "tag2"},
+		Meta: map[string]string{
+			"meta1": "val1",
+			"meta2": "val2",
+		},
+	}
+	r := consul.NewConsulRegister(consulClient,
+		consul.WithCheck(check), consul.WithAdditionInfo(additionInfo),
+	)
 
 	wg.Add(2)
 	go func() {
@@ -67,9 +77,6 @@ func main() {
 				ServiceName: "custom-config-demo",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
-				Tags: map[string]string{
-					"key1": "val1",
-				},
 			}),
 		)
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
@@ -95,9 +102,6 @@ func main() {
 				ServiceName: "custom-config-demo",
 				Addr:        utils.NewNetAddr("tcp", addr),
 				Weight:      10,
-				Tags: map[string]string{
-					"key2": "val2",
-				},
 			}),
 		)
 		h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {

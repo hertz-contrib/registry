@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -133,7 +132,7 @@ func (e *etcdRegistry) register(info *registry.Info, leaseID clientv3.LeaseID) e
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	_, err = e.etcdClient.Put(ctx, serviceKey(info.ServiceName, info.Addr.String()), string(val), clientv3.WithLease(leaseID))
+	_, err = e.etcdClient.Put(ctx, serviceKey(info.ServiceName, addr), string(val), clientv3.WithLease(leaseID))
 	return err
 }
 
@@ -169,24 +168,6 @@ func (e *etcdRegistry) keepalive(meta *registerMeta) error {
 	return nil
 }
 
-func getLocalIPv4Host() (string, error) {
-	addr, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", err
-	}
-
-	for _, addr := range addr {
-		ipNet, isIpNet := addr.(*net.IPNet)
-		if isIpNet && !ipNet.IP.IsLoopback() {
-			ipv4 := ipNet.IP.To4()
-			if ipv4 != nil {
-				return ipv4.String(), nil
-			}
-		}
-	}
-	return "", fmt.Errorf("not found ipv4 address")
-}
-
 // getAddressOfRegistration returns the address of the service registration.
 func (e *etcdRegistry) getAddressOfRegistration(info *registry.Info) (string, error) {
 	host, port, err := net.SplitHostPort(info.Addr.String())
@@ -212,10 +193,23 @@ func (e *etcdRegistry) getAddressOfRegistration(info *registry.Info) (string, er
 		port = portToRegistry
 	}
 
-	p, err := strconv.Atoi(port)
+	return net.JoinHostPort(host, port), nil
+}
+
+func getLocalIPv4Host() (string, error) {
+	addr, err := net.InterfaceAddrs()
 	if err != nil {
-		return "", fmt.Errorf("parse registry info port error: %w", err)
+		return "", err
 	}
 
-	return fmt.Sprintf("%s:%d", host, p), nil
+	for _, addr := range addr {
+		ipNet, isIpNet := addr.(*net.IPNet)
+		if isIpNet && !ipNet.IP.IsLoopback() {
+			ipv4 := ipNet.IP.To4()
+			if ipv4 != nil {
+				return ipv4.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("not found ipv4 address")
 }

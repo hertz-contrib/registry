@@ -16,6 +16,10 @@ package etcd
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -28,8 +32,10 @@ import (
 var _ registry.Registry = (*etcdRegistry)(nil)
 
 const (
-	etcdPrefix = "hertz/registry-etcd"
-	ttlKey     = "HERTZ_ETCD_REGISTRY_LEASE_TTL"
+	etcdPrefix          = "hertz/registry-etcd"
+	ttlKey              = "HERTZ_ETCD_REGISTRY_LEASE_TTL"
+	hertzIpToRegistry   = "HERTZ_IP_TO_REGISTRY"
+	hertzPortToRegistry = "HERTZ_PORT_TO_REGISTRY"
 )
 
 type etcdRegistry struct {
@@ -112,9 +118,13 @@ func (e *etcdRegistry) grantLease() (clientv3.LeaseID, error) {
 }
 
 func (e *etcdRegistry) register(info *registry.Info, leaseID clientv3.LeaseID) error {
+	addr, err := e.getAddressOfRegistration(info)
+	if err != nil {
+		return err
+	}
 	val, err := sonic.Marshal(&instanceInfo{
 		Network: info.Addr.Network(),
-		Address: info.Addr.String(),
+		Address: addr,
 		Weight:  info.Weight,
 		Tags:    info.Tags,
 	})
@@ -130,7 +140,11 @@ func (e *etcdRegistry) register(info *registry.Info, leaseID clientv3.LeaseID) e
 func (e *etcdRegistry) deregister(info *registry.Info) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	_, err := e.etcdClient.Delete(ctx, serviceKey(info.ServiceName, info.Addr.String()))
+	addr, err := e.getAddressOfRegistration(info)
+	if err != nil {
+		return err
+	}
+	_, err = e.etcdClient.Delete(ctx, serviceKey(info.ServiceName, addr))
 	return err
 }
 
@@ -153,4 +167,55 @@ func (e *etcdRegistry) keepalive(meta *registerMeta) error {
 		}
 	}()
 	return nil
+}
+
+func getLocalIPv4Host() (string, error) {
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addr {
+		ipNet, isIpNet := addr.(*net.IPNet)
+		if isIpNet && !ipNet.IP.IsLoopback() {
+			ipv4 := ipNet.IP.To4()
+			if ipv4 != nil {
+				return ipv4.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("not found ipv4 address")
+}
+
+// getAddressOfRegistration returns the address of the service registration.
+func (e *etcdRegistry) getAddressOfRegistration(info *registry.Info) (string, error) {
+	host, port, err := net.SplitHostPort(info.Addr.String())
+	if err != nil {
+		return "", err
+	}
+
+	// if host is empty or "::", use local ipv4 address as host
+	if host == "" || host == "::" {
+		host, err = getLocalIPv4Host()
+		if err != nil {
+			return "", fmt.Errorf("parse registry info addr error: %w", err)
+		}
+	}
+
+	// if env HERTZ_IP_TO_REGISTRY is set, use it as host
+	if ipToRegistry, exists := os.LookupEnv(hertzIpToRegistry); exists && ipToRegistry != "" {
+		host = ipToRegistry
+	}
+
+	// if env HERTZ_PORT_TO_REGISTRY is set, use it as port
+	if portToRegistry, exists := os.LookupEnv(hertzPortToRegistry); exists && portToRegistry != "" {
+		port = portToRegistry
+	}
+
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return "", fmt.Errorf("parse registry info port error: %w", err)
+	}
+
+	return fmt.Sprintf("%s:%d", host, p), nil
 }

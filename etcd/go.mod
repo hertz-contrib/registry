@@ -7,4 +7,5 @@ require (
 	github.com/cloudwego/hertz v0.6.0
 	github.com/stretchr/testify v1.8.2
 	go.etcd.io/etcd/client/v3 v3.5.7
+	go.etcd.io/etcd/server/v3 v3.5.7
 )

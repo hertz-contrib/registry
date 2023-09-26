@@ -191,6 +191,9 @@ func main() {
 	}
 }
 ```
+## How to Dynamically specify ip and port
+
+To dynamically specify an IP and port, one should first set the environment variables `HERTZ_IP_TO_REGISTRY` and `HERTZ_PORT_TO_REGISTRY`. If these variables are not set, the system defaults to using the service's listening IP and port. Notably, if the service's listening IP is either not set or set to "::", the system will automatically retrieve and use the machine's IPV4 address.
 
 ## Compatibility
 

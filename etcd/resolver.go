@@ -32,13 +32,13 @@ type etcdResolver struct {
 
 // NewEtcdResolver creates a etcd based resolver.
 func NewEtcdResolver(endpoints []string, opts ...Option) (discovery.Resolver, error) {
-	cfg := clientv3.Config{
-		Endpoints: endpoints,
+	cfg := &option{
+		etcdCfg: clientv3.Config{
+			Endpoints: endpoints,
+		},
 	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-	etcdClient, err := clientv3.New(cfg)
+	cfg.apply(opts...)
+	etcdClient, err := clientv3.New(cfg.etcdCfg)
 	if err != nil {
 		return nil, err
 	}

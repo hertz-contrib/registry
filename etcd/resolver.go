@@ -16,8 +16,8 @@ package etcd
 
 import (
 	"context"
-	"encoding/json"
 
+	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -58,7 +58,7 @@ func (e *etcdResolver) Resolve(ctx context.Context, desc string) (discovery.Resu
 	var eps []discovery.Instance
 	for _, kv := range resp.Kvs {
 		var info instanceInfo
-		err := json.Unmarshal(kv.Value, &info)
+		err := sonic.Unmarshal(kv.Value, &info)
 		if err != nil {
 			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore key: %v", err, string(kv.Key))
 			continue

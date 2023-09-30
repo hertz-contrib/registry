@@ -119,7 +119,7 @@ func (e *etcdRegistry) Deregister(info *registry.Info) error {
 }
 
 func (e *etcdRegistry) grantLease() (clientv3.LeaseID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	resp, err := e.etcdClient.Grant(ctx, e.leaseTTL)
 	if err != nil {
@@ -195,7 +195,15 @@ func (e *etcdRegistry) keepalive(meta registerMeta) error {
 
 // keepRegister keep register service by retryConfig
 func (e *etcdRegistry) keepRegister(key, val string, retryConfig *retryCfg) {
-	var failedTimes uint
+	var (
+		failedTimes uint
+		resp        *clientv3.GetResponse
+		err         error
+		ctx         context.Context
+		cancel      context.CancelFunc
+		wg          sync.WaitGroup
+	)
+
 	delay := retryConfig.observeDelay
 	// if maxAttemptTimes is 0, keep register forever
 	for retryConfig.maxAttemptTimes == 0 || failedTimes < retryConfig.maxAttemptTimes {
@@ -209,9 +217,14 @@ func (e *etcdRegistry) keepRegister(key, val string, retryConfig *retryCfg) {
 		case <-time.After(delay):
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		resp, err := e.etcdClient.Get(ctx, key)
-		cancel()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
+			resp, err = e.etcdClient.Get(ctx, key)
+			defer cancel()
+		}()
+		wg.Wait()
 
 		if err != nil {
 			hlog.Warnf("keep register get %s failed with err: %v", key, err)

@@ -197,17 +197,6 @@ After the service is registered to `ETCD`, it will regularly check the status of
 
 ### Default Retry Config
 
-```go
-type retryCfg struct {
-	// The maximum number of call attempt times, including the initial call
-	maxAttemptTimes uint
-	// observeDelay is the delay time for checking the service status under normal conditions
-	observeDelay time.Duration
-	// The delay time of observing etcd key
-	retryDelay time.Duration
-}
-```
-
 | Config Name         | Default Value    | Description                                                                               |
 |:--------------------|:-----------------|:------------------------------------------------------------------------------------------|
 | WithMaxAttemptTimes | 5                | Used to set the maximum number of attempts, if 0, it means infinite attempts              |

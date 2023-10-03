@@ -221,8 +221,8 @@ func (e *etcdRegistry) keepRegister(key, val string, retryConfig *retryCfg) {
 		go func() {
 			defer wg.Done()
 			ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
-			resp, err = e.etcdClient.Get(ctx, key)
 			defer cancel()
+			resp, err = e.etcdClient.Get(ctx, key)
 		}()
 		wg.Wait()
 

@@ -191,6 +191,61 @@ func main() {
 	}
 }
 ```
+## Retry
+
+After the service is registered to `ETCD`, it will regularly check the status of the service. If any abnormal status is found, it will try to register the service again. `observeDelay` is the delay time for checking the service status under normal conditions, and `retryDelay` is the delay time for attempting to register the service after disconnecting.
+
+### Default Retry Config
+
+| Config Name         | Default Value    | Description                                                                               |
+|:--------------------|:-----------------|:------------------------------------------------------------------------------------------|
+| WithMaxAttemptTimes | 5                | Used to set the maximum number of attempts, if 0, it means infinite attempts              |
+| WithObserveDelay    | 30 * time.Second | Used to set the delay time for checking service status under normal connection conditions |
+| WithRetryDelay      | 10 * time.Second | Used to set the retry delay time after disconnecting                                      |
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"time"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/hertz-contrib/registry/etcd"
+)
+
+func main() {
+	r, _ := etcd.NewEtcdRegistry(
+		[]string{"127.0.0.1:2379"},
+		etcd.WithMaxAttemptTimes(10),
+		etcd.WithObserveDelay(20*time.Second),
+		etcd.WithRetryDelay(5*time.Second),
+	)
+
+	addr := "127.0.0.1:8888"
+	h := server.Default(
+		server.WithHostPorts(addr),
+		server.WithRegistry(r, &registry.Info{
+			ServiceName: "hertz.test.demo",
+			Addr:        utils.NewNetAddr("tcp", addr),
+			Weight:      10,
+			Tags:        nil,
+		}),
+	)
+	h.GET("/ping", func(_ context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong2"})
+	})
+	h.Spin()
+}
+
+```
+
 ## How to Dynamically specify ip and port
 
 To dynamically specify an IP and port, one should first set the environment variables `HERTZ_IP_TO_REGISTRY` and `HERTZ_PORT_TO_REGISTRY`. If these variables are not set, the system defaults to using the service's listening IP and port. Notably, if the service's listening IP is either not set or set to "::", the system will automatically retrieve and use the machine's IPV4 address.

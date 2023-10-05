@@ -38,10 +38,13 @@ const (
 )
 
 type etcdRegistry struct {
-	etcdClient *clientv3.Client
-	leaseTTL   int64
-	meta       *registerMeta
-	mu         sync.Mutex
+	etcdClient  *clientv3.Client
+	retryConfig *retryCfg
+
+	leaseTTL int64
+	meta     *registerMeta
+	mu       sync.Mutex
+	stop     chan struct{}
 }
 
 type registerMeta struct {
@@ -52,19 +55,16 @@ type registerMeta struct {
 
 // NewEtcdRegistry creates a etcd based registry.
 func NewEtcdRegistry(endpoints []string, opts ...Option) (registry.Registry, error) {
-	cfg := clientv3.Config{
-		Endpoints: endpoints,
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-	etcdClient, err := clientv3.New(cfg)
+	cfg := newOptionForServer(endpoints, opts...)
+	etcdClient, err := clientv3.New(cfg.etcdCfg)
 	if err != nil {
 		return nil, err
 	}
 	return &etcdRegistry{
-		etcdClient: etcdClient,
-		leaseTTL:   getTTL(),
+		etcdClient:  etcdClient,
+		leaseTTL:    getTTL(),
+		retryConfig: cfg.retryCfg,
+		stop:        make(chan struct{}, 1),
 	}, nil
 }
 
@@ -84,12 +84,13 @@ func (e *etcdRegistry) Register(info *registry.Info) error {
 		leaseID: leaseID,
 	}
 	meta.ctx, meta.cancel = context.WithCancel(context.Background())
-	if err := e.keepalive(&meta); err != nil {
+	if err := e.keepalive(meta); err != nil {
 		return err
 	}
 	e.mu.Lock()
 	e.meta = &meta
 	e.mu.Unlock()
+
 	return nil
 }
 
@@ -107,7 +108,7 @@ func (e *etcdRegistry) Deregister(info *registry.Info) error {
 }
 
 func (e *etcdRegistry) grantLease() (clientv3.LeaseID, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	resp, err := e.etcdClient.Grant(ctx, e.leaseTTL)
 	if err != nil {
@@ -133,7 +134,16 @@ func (e *etcdRegistry) register(info *registry.Info, leaseID clientv3.LeaseID) e
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	_, err = e.etcdClient.Put(ctx, serviceKey(info.ServiceName, addr), string(val), clientv3.WithLease(leaseID))
-	return err
+	if err != nil {
+		return err
+	}
+
+	// retry start
+	go func(key, val string) {
+		e.keepRegister(key, val, e.retryConfig)
+	}(serviceKey(info.ServiceName, addr), string(val))
+
+	return nil
 }
 
 func (e *etcdRegistry) deregister(info *registry.Info) error {
@@ -144,11 +154,15 @@ func (e *etcdRegistry) deregister(info *registry.Info) error {
 		return err
 	}
 	_, err = e.etcdClient.Delete(ctx, serviceKey(info.ServiceName, addr))
-	return err
+	if err != nil {
+		return err
+	}
+	e.stop <- struct{}{}
+	return nil
 }
 
 // keepalive keep the lease alive
-func (e *etcdRegistry) keepalive(meta *registerMeta) error {
+func (e *etcdRegistry) keepalive(meta registerMeta) error {
 	keepAlive, err := e.etcdClient.KeepAlive(meta.ctx, meta.leaseID)
 	if err != nil {
 		return err
@@ -166,6 +180,81 @@ func (e *etcdRegistry) keepalive(meta *registerMeta) error {
 		}
 	}()
 	return nil
+}
+
+// keepRegister keep register service by retryConfig
+func (e *etcdRegistry) keepRegister(key, val string, retryConfig *retryCfg) {
+	var (
+		failedTimes uint
+		resp        *clientv3.GetResponse
+		err         error
+		ctx         context.Context
+		cancel      context.CancelFunc
+		wg          sync.WaitGroup
+	)
+
+	delay := retryConfig.observeDelay
+	// if maxAttemptTimes is 0, keep register forever
+	for retryConfig.maxAttemptTimes == 0 || failedTimes < retryConfig.maxAttemptTimes {
+		select {
+		case _, ok := <-e.stop:
+			if !ok {
+				close(e.stop)
+			}
+			hlog.Infof("stop keep register service %s", key)
+			return
+		case <-time.After(delay):
+		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
+			defer cancel()
+			resp, err = e.etcdClient.Get(ctx, key)
+		}()
+		wg.Wait()
+
+		if err != nil {
+			hlog.Warnf("keep register get %s failed with err: %v", key, err)
+			delay = retryConfig.retryDelay
+			failedTimes++
+			continue
+		}
+
+		if len(resp.Kvs) == 0 {
+			hlog.Infof("keep register service %s", key)
+			delay = retryConfig.retryDelay
+			leaseID, err := e.grantLease()
+			if err != nil {
+				hlog.Warnf("keep register grant lease %s failed with err: %v", key, err)
+				failedTimes++
+				continue
+			}
+
+			_, err = e.etcdClient.Put(ctx, key, val, clientv3.WithLease(leaseID))
+			if err != nil {
+				hlog.Warnf("keep register put %s failed with err: %v", key, err)
+				failedTimes++
+				continue
+			}
+
+			meta := registerMeta{
+				leaseID: leaseID,
+			}
+			meta.ctx, meta.cancel = context.WithCancel(context.Background())
+			if err := e.keepalive(meta); err != nil {
+				hlog.Warnf("keep register keepalive %s failed with err: %v", key, err)
+				failedTimes++
+				continue
+			}
+			e.meta.cancel()
+			e.meta = &meta
+			delay = retryConfig.observeDelay
+		}
+		failedTimes = 0
+	}
+	hlog.Errorf("keep register service %s failed times:%d", key, failedTimes)
 }
 
 // getAddressOfRegistration returns the address of the service registration.
@@ -212,4 +301,19 @@ func getLocalIPv4Host() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("not found ipv4 address")
+}
+
+func newOptionForServer(endpoints []string, opts ...Option) *option {
+	cfg := &option{
+		etcdCfg: clientv3.Config{
+			Endpoints: endpoints,
+		},
+		retryCfg: &retryCfg{
+			maxAttemptTimes: 5,
+			observeDelay:    30 * time.Second,
+			retryDelay:      10 * time.Second,
+		},
+	}
+	cfg.apply(opts...)
+	return cfg
 }

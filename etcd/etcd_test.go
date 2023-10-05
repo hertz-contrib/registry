@@ -24,11 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/client"
+	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -395,6 +395,26 @@ func TestEtcdRegistryWithEnvironmentVariable(t *testing.T) {
 	os.Unsetenv(hertzPortToRegistry)
 	os.Unsetenv(hertzIpToRegistry)
 	teardownEmbedEtcd(s)
+}
+
+func TestRetryOption(t *testing.T) {
+	o := newOptionForServer([]string{"127.0.0.1:2345"})
+	assert.Equal(t, o.etcdCfg.Endpoints, []string{"127.0.0.1:2345"})
+	assert.Equal(t, uint(5), o.retryCfg.maxAttemptTimes)
+	assert.Equal(t, 30*time.Second, o.retryCfg.observeDelay)
+	assert.Equal(t, 10*time.Second, o.retryCfg.retryDelay)
+}
+
+func TestRetryCustomConfig(t *testing.T) {
+	o := newOptionForServer(
+		[]string{"127.0.0.1:2345"},
+		WithMaxAttemptTimes(10),
+		WithObserveDelay(20*time.Second),
+		WithRetryDelay(5*time.Second),
+	)
+	assert.Equal(t, uint(10), o.retryCfg.maxAttemptTimes)
+	assert.Equal(t, 20*time.Second, o.retryCfg.observeDelay)
+	assert.Equal(t, 5*time.Second, o.retryCfg.retryDelay)
 }
 
 func setupEmbedEtcd(t *testing.T) (*embed.Etcd, string) {

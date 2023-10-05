@@ -55,18 +55,7 @@ type registerMeta struct {
 
 // NewEtcdRegistry creates a etcd based registry.
 func NewEtcdRegistry(endpoints []string, opts ...Option) (registry.Registry, error) {
-	cfg := &option{
-		etcdCfg: clientv3.Config{
-			Endpoints: endpoints,
-		},
-		retryCfg: &retryCfg{
-			maxAttemptTimes: 5,
-			observeDelay:    30 * time.Second,
-			retryDelay:      10 * time.Second,
-		},
-	}
-	cfg.apply(opts...)
-
+	cfg := newOptionForServer(endpoints, opts...)
 	etcdClient, err := clientv3.New(cfg.etcdCfg)
 	if err != nil {
 		return nil, err
@@ -312,4 +301,19 @@ func getLocalIPv4Host() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("not found ipv4 address")
+}
+
+func newOptionForServer(endpoints []string, opts ...Option) *option {
+	cfg := &option{
+		etcdCfg: clientv3.Config{
+			Endpoints: endpoints,
+		},
+		retryCfg: &retryCfg{
+			maxAttemptTimes: 5,
+			observeDelay:    30 * time.Second,
+			retryDelay:      10 * time.Second,
+		},
+	}
+	cfg.apply(opts...)
+	return cfg
 }

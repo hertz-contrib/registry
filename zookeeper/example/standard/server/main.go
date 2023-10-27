@@ -16,15 +16,16 @@ package main
 
 import (
 	"context"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/hertz-contrib/registry/zookeeper"
-	"net"
-	"sync"
-	"time"
 )
 
 var wg sync.WaitGroup
@@ -65,7 +66,6 @@ func main() {
 			ctx.JSON(consts.StatusOK, e)
 		})
 		h.Spin()
-
 	}()
 	go func() {
 		defer wg.Done()
@@ -91,7 +91,6 @@ func main() {
 			ctx.JSON(consts.StatusOK, e)
 		})
 		h.Spin()
-
 	}()
 
 	wg.Wait()

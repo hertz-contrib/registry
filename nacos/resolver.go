@@ -105,7 +105,7 @@ func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Resul
 	}
 	instances := make([]discovery.Instance, 0, len(res))
 	for _, ins := range res {
-		if !ins.Enable || !compareMaps(ins.Metadata, metadata) {
+		if !ins.Enable || (len(metadata) > 0 && !compareMaps(ins.Metadata, metadata)) {
 			continue
 		}
 

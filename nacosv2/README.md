@@ -2,7 +2,7 @@
 
 [中文](../nacos/README_CN.md)
 
-NacosV2 as service discovery for Hertz.
+**Nacos V2 sdk** as service discovery for **Hertz**.
 
 ## How to use?
 

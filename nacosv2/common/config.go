@@ -44,7 +44,7 @@ func NewDefaultNacosV2Config() (naming_client.INamingClient, error) {
 	serverConfig := []constant.ServerConfig{
 		*constant.NewServerConfig(NacosV2Addr(), uint64(NacosV2Port())),
 	}
-	var namingClient, err = clients.NewNamingClient(
+	namingClient, err := clients.NewNamingClient(
 		vo.NacosClientParam{
 			ClientConfig:  &clientConfig,
 			ServerConfigs: serverConfig,

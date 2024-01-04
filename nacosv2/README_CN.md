@@ -2,7 +2,7 @@
 
 [English](../nacosv2/README.md)
 
-使用 **nacosV2** 作为 **Hertz** 的注册中心
+使用 **nacos v2 sdk** 作为 **Hertz** 的注册中心
 
 ## 这个项目应当如何使用?
 
@@ -12,24 +12,24 @@
 
 ```go
 import (
-    "context"
-    "log"
-    
-    "github.com/cloudwego/hertz/pkg/app"
-    "github.com/cloudwego/hertz/pkg/app/server"
-    "github.com/cloudwego/hertz/pkg/app/server/registry"
-    "github.com/cloudwego/hertz/pkg/common/utils"
-    "github.com/cloudwego/hertz/pkg/protocol/consts"
-    "github.com/hertz-contrib/registry/nacosv2"
+	"context"
+	"log"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/hertz-contrib/registry/nacosv2"
 )
 
 func main() {
 	addr := "127.0.0.1:8888"
-	r, err := nacosRegistry.NewDefaultNacosV2Registry()
-    if err != nil {
-        log.Fatal(err)
-        return
-    }
+	r, err := nacosv2.NewDefaultNacosV2Registry()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	h := server.Default(
 		server.WithHostPorts(addr),
 		server.WithRegistry(r, &registry.Info{
@@ -39,10 +39,11 @@ func main() {
 			Tags:        nil,
 		}),
 	)
-	// ...
+	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong"})
+	})
 	h.Spin()
 }
-
 ```
 
 ### 客户端
@@ -51,7 +52,6 @@ func main() {
 
 ```go
 import (
-    "context"
     "log"
     
     "github.com/cloudwego/hertz/pkg/app/client"
@@ -66,7 +66,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-    r, err := nacos.NewDefaultNacosV2Resolver()
+    r, err := nacosv2.NewDefaultNacosV2Resolver()
     if err != nil {
         log.Fatal(err)
         return
@@ -119,8 +119,6 @@ go run ./examples/standard/client/main.go
 
 ```go
 import (
-    "context"
-    
     "github.com/cloudwego/hertz/pkg/app"
     "github.com/cloudwego/hertz/pkg/app/server"
     "github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -179,8 +177,7 @@ func main() {
 
 ```go
 import (
-    "context"
-    
+	
     "github.com/cloudwego/hertz/pkg/app/client"
     "github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
     "github.com/cloudwego/hertz/pkg/common/config"

@@ -16,49 +16,31 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/registry/nacosv2"
-	"github.com/nacos-group/nacos-sdk-go/v2/clients"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
 func main() {
-	cli, err := client.NewClient()
+	client, err := client.NewClient()
 	if err != nil {
 		panic(err)
 	}
-	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("127.0.0.1", 8848),
-	}
-	cc := constant.ClientConfig{
-		NamespaceId:         "public",
-		TimeoutMs:           5000,
-		NotLoadCacheAtStart: true,
-		LogDir:              "/tmp/nacos/log",
-		CacheDir:            "/tmp/nacos/cache",
-		LogLevel:            "info",
-	}
-
-	nacosClient, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		})
+	r, err := nacosv2.NewDefaultNacosV2Resolver()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
-	r := nacosv2.NewNacosV2Resolver(nacosClient)
-	cli.Use(sd.Discovery(r))
+	client.Use(sd.Discovery(r))
 	for i := 0; i < 10; i++ {
-		status, body, err := cli.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
+		status, body, err := client.Get(context.Background(), nil, "http://hertz.test.demo/ping", config.WithSD(true))
 		if err != nil {
 			hlog.Fatal(err)
 		}
-		hlog.Infof("code=%d,body=%s", status, string(body))
+		hlog.Infof("code=%d,body=%s\n", status, string(body))
 	}
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	v2 "github.com/hertz-contrib/registry/nacosv2"
 )
 
 var (

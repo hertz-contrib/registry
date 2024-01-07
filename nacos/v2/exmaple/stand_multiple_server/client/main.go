@@ -22,6 +22,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	v2 "github.com/hertz-contrib/registry/nacosv2"
 )
 
 func main() {

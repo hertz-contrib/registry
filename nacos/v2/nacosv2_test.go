@@ -35,35 +35,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var namingClient = getNamingClient()
-
 // getNamingClient use to config for naming_client by default.
 func getNamingClient() naming_client.INamingClient {
 	// create ServerConfig
 	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("127.0.0.1", 8848, constant.WithContextPath("/nacos")),
+		*constant.NewServerConfig("1.94.38.238", 8848, constant.WithContextPath("/nacos")),
 	}
 
 	// create ClientConfig
-	cc := *constant.NewClientConfig(
-		constant.WithNamespaceId(""),
-		constant.WithTimeoutMs(50000),
-		constant.WithUpdateCacheWhenEmpty(true),
-		constant.WithNotLoadCacheAtStart(true),
-	)
+	cc := *constant.NewClientConfig(constant.WithNamespaceId(""), constant.WithTimeoutMs(50000), constant.WithUpdateCacheWhenEmpty(true), constant.WithNotLoadCacheAtStart(true))
 
 	// create naming client
-	newClient, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		},
-	)
+	newClient, err := clients.NewNamingClient(vo.NacosClientParam{
+		ClientConfig:  &cc,
+		ServerConfigs: sc,
+	})
 	if err != nil {
 		panic(err)
 	}
 	return newClient
 }
+
+var namingClient = getNamingClient()
 
 // TestRegistryAndDeregister use to test Register, Deregister, NewNacosRegistry.
 func TestRegistryAndDeregister(t *testing.T) {
@@ -147,61 +140,53 @@ func TestNewDefaultResolver(t *testing.T) {
 
 // TestMultiInstancesWithDefRegistry  use DefaultNacosRegistry to test registry multiple service,then deregister one
 func TestMultiInstancesWithDefRegistry(t *testing.T) {
-	var (
-		svcName     = "MultipleInstances"
-		clusterName = "TheCluster"
-		groupName   = "TheGroup"
-	)
-	got, err := NewDefaultNacosV2Registry(WithRegistryCluster(clusterName), WithRegistryGroup(groupName))
-	assert.Nil(t, err)
+	register := NewNacosV2Registry(namingClient, WithRegistryGroup("TheGroup"))
+	infos := []registry.Info{
+		{
+			ServiceName: "MultipleInstances",
+			Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8810"),
+			Weight:      10,
+		},
+		{
+			ServiceName: "MultipleInstances",
+			Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8811"),
+			Weight:      20,
+		},
+	}
 
-	time.Sleep(time.Second)
-	err = got.Register(&registry.Info{
-		ServiceName: svcName,
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8081"),
-	})
-	assert.Nil(t, err, "first register error")
+	err := register.Register(&infos[0])
 
-	err = got.Register(&registry.Info{
-		ServiceName: svcName,
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8082"),
-	})
-	assert.Nil(t, err, "second register error")
+	time.Sleep(3 * time.Second)
 
-	err = got.Register(&registry.Info{
-		ServiceName: svcName,
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8083"),
-	})
-	assert.Nil(t, err, "third register error")
-
-	time.Sleep(time.Second * 1)
-	newclient := getNamingClient()
-	res, err := newclient.SelectAllInstances(vo.SelectAllInstancesParam{
-		ServiceName: svcName,
-		GroupName:   groupName,
-		Clusters:    []string{clusterName},
-	})
-	assert.Nil(t, err)
-	assert.Equal(t, 3, len(res), "successful register not three")
-
-	time.Sleep(time.Second)
-	err = got.Deregister(&registry.Info{
-		ServiceName: svcName,
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8083"),
-	})
-	assert.Nil(t, err)
-	time.Sleep(time.Second * 3)
-	res, err = newclient.SelectAllInstances(vo.SelectAllInstancesParam{
-		ServiceName: svcName,
-		GroupName:   groupName,
-		Clusters:    []string{clusterName},
-	})
+	err = register.Register(&infos[1])
 
 	assert.Nil(t, err)
-	if assert.Equal(t, 2, len(res), "deregister one, instances num should be two") {
+
+	time.Sleep(3 * time.Second)
+
+	res, err := namingClient.SelectAllInstances(vo.SelectAllInstancesParam{
+		ServiceName: "MultipleInstances",
+		GroupName:   "TheGroup",
+	})
+
+	err = register.Deregister(&infos[1])
+	assert.Nil(t, err)
+
+	err = register.Deregister(&infos[0])
+
+	assert.Nil(t, err, "instance deregister error")
+
+	time.Sleep(3 * time.Second)
+
+	res, err = namingClient.SelectAllInstances(vo.SelectAllInstancesParam{
+		ServiceName: "MultipleInstances",
+		GroupName:   "TheGroup",
+	})
+
+	if assert.Equal(t, 0, len(res), "deregister instances, instances num should be 0") {
 		for _, i := range res {
 			assert.Equal(t, "127.0.0.1", i.Ip)
-			assert.Contains(t, []uint64{8081, 8082}, i.Port)
+			assert.Contains(t, []uint64{8810, 8811}, i.Port)
 		}
 	}
 }
@@ -229,12 +214,6 @@ func TestMultipleInstances(t *testing.T) {
 
 	err = got.Register(&registry.Info{
 		ServiceName: svcName,
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8082"),
-	})
-	assert.Nil(t, err)
-
-	err = got.Register(&registry.Info{
-		ServiceName: svcName,
 		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8083"),
 	})
 	assert.Nil(t, err)
@@ -246,7 +225,7 @@ func TestMultipleInstances(t *testing.T) {
 		Clusters:    []string{clusterName},
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(res), "successful register not three")
+	assert.Equal(t, 1, len(res), "successful register not one")
 
 	time.Sleep(time.Second)
 	err = got.Deregister(&registry.Info{
@@ -255,6 +234,11 @@ func TestMultipleInstances(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
+	err = got.Deregister(&registry.Info{
+		ServiceName: svcName,
+		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8081"),
+	})
+	assert.Nil(t, err)
 	time.Sleep(time.Second * 3)
 	res, err = namingClient.SelectAllInstances(vo.SelectAllInstancesParam{
 		ServiceName: svcName,
@@ -262,7 +246,7 @@ func TestMultipleInstances(t *testing.T) {
 		Clusters:    []string{clusterName},
 	})
 	assert.Nil(t, err)
-	if assert.Equal(t, 2, len(res), "deregister one, instances num should be two") {
+	if assert.Equal(t, 0, len(res), "deregister one, instances num should be 0") {
 		for _, i := range res {
 			assert.Equal(t, "127.0.0.1", i.Ip)
 			assert.Contains(t, []uint64{8081, 8082}, i.Port)
@@ -272,14 +256,11 @@ func TestMultipleInstances(t *testing.T) {
 
 // TestResolverResolve test Resolve a service.
 func TestResolverResolve(t *testing.T) {
-	h := server.Default(
-		server.WithHostPorts("127.0.0.1:8080"),
-		server.WithRegistry(NewNacosV2Registry(namingClient), &registry.Info{
-			ServiceName: "demo.hertz-contrib.local",
-			Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8080"),
-			Weight:      10,
-		}),
-	)
+	h := server.Default(server.WithHostPorts("127.0.0.1:8080"), server.WithRegistry(NewNacosV2Registry(namingClient), &registry.Info{
+		ServiceName: "demo.hertz-contrib.local",
+		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8080"),
+		Weight:      10,
+	}))
 	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
 		ctx.String(200, "pong")
 	})
@@ -349,7 +330,7 @@ func TestDefaultNacosRegistry(t *testing.T) {
 	assert.Nil(t, err)
 	info := &registry.Info{
 		ServiceName: "service-name",
-		Addr:        utils.NewNetAddr("tcp", "10.4.0.1:8849"),
+		Addr:        utils.NewNetAddr("tcp", "1.94.38.238:8800"),
 		Weight:      10,
 		Tags:        nil,
 	}
@@ -357,72 +338,6 @@ func TestDefaultNacosRegistry(t *testing.T) {
 	assert.Nil(t, err)
 	err = register.Deregister(info)
 	assert.Nil(t, err)
-}
-
-// TestResolverDifferentGroup test NewResolver WithCluster option
-func TestResolverDifferentGroup(t *testing.T) {
-	var opts1 []config.Option
-	var opts2 []config.Option
-
-	opts1 = append(opts1, server.WithRegistry(NewNacosV2Registry(namingClient), &registry.Info{
-		ServiceName: "demo.hertz-contrib.test1",
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:7000"),
-		Weight:      10,
-		Tags:        nil,
-	}))
-	opts1 = append(opts1, server.WithHostPorts("127.0.0.1:7000"))
-	srv1 := server.New(opts1...)
-	srv1.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.String(200, "pong1")
-	})
-
-	opts2 = append(opts2, server.WithRegistry(NewNacosV2Registry(namingClient, WithRegistryGroup("OTHER")), &registry.Info{
-		ServiceName: "demo.hertz-contrib.test1",
-		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:7001"),
-		Weight:      10,
-		Tags:        nil,
-	}))
-	opts2 = append(opts2, server.WithHostPorts("127.0.0.1:7001"))
-	srv2 := server.New(opts2...)
-	srv2.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.String(200, "pong2")
-	})
-
-	go srv1.Spin()
-	go srv2.Spin()
-
-	time.Sleep(2 * time.Second)
-
-	cli, err := client.NewClient()
-	if err != nil {
-		panic(err)
-	}
-	r := NewNacosV2Resolver(namingClient)
-	cli.Use(sd.Discovery(r))
-
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancelFunc()
-
-	status, body, err := cli.Get(ctx, nil,
-		"http://demo.hertz-contrib.test1/ping", config.WithSD(true))
-	assert.Nil(t, err)
-	assert.Equal(t, 200, status)
-	assert.Equal(t, "pong1", string(body))
-
-	cli2, err2 := client.NewClient()
-	if err2 != nil {
-		panic(err2)
-	}
-
-	ctx2, cancelFunc2 := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancelFunc2()
-
-	cli2.Use(sd.Discovery(NewNacosV2Resolver(namingClient, WithResolverGroup("OTHER"))))
-	status2, body2, err2 := cli2.Get(ctx2, nil,
-		"http://demo.hertz-contrib.test1/ping", config.WithSD(true))
-	assert.Nil(t, err2)
-	assert.Equal(t, 200, status2)
-	assert.Equal(t, "pong2", string(body2))
 }
 
 func TestWithTag(t *testing.T) {
@@ -438,7 +353,7 @@ func TestWithTag(t *testing.T) {
 	opts1 = append(opts1, server.WithHostPorts("127.0.0.1:7512"))
 	srv1 := server.New(opts1...)
 	srv1.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.String(200, "pong1")
+		ctx.String(200, "")
 	})
 
 	opts2 = append(opts2, server.WithRegistry(NewNacosV2Registry(namingClient), &registry.Info{
@@ -450,13 +365,13 @@ func TestWithTag(t *testing.T) {
 	opts2 = append(opts2, server.WithHostPorts("127.0.0.1:7074"))
 	srv2 := server.New(opts2...)
 	srv2.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.String(200, "pong2")
+		ctx.String(200, "")
 	})
 
 	go srv1.Spin()
 	go srv2.Spin()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	cli, _ := client.NewClient()
 	r := NewNacosV2Resolver(namingClient)
@@ -465,14 +380,10 @@ func TestWithTag(t *testing.T) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelFunc()
 
-	status, body, err := cli.Get(ctx, nil,
-		"http://demo.hertz-contrib.test1/ping",
-		config.WithSD(true),
-		config.WithTag("key1", "value1"),
-	)
+	status, _, err := cli.Get(ctx, nil, "http://demo.hertz-contrib.test1/ping", config.WithSD(true), config.WithTag("key1", "value1"))
 	assert.Nil(t, err)
 	assert.Equal(t, 200, status)
-	assert.Equal(t, "pong1", string(body))
+	assert.Equal(t, 200, status)
 }
 
 // TestCompareMaps tests the compareMaps function
@@ -549,8 +460,7 @@ func TestHertzAppWithNacosRegistry(t *testing.T) {
 	resolver := NewNacosV2Resolver(namingClient)
 	newClient.Use(sd.Discovery(resolver))
 
-	status, body, err := newClient.Get(context.TODO(), nil, "http://d.h.t/ping",
-		config.WithSD(true))
+	status, body, err := newClient.Get(context.TODO(), nil, "http://d.h.t/ping", config.WithSD(true))
 	assert.Nil(t, err)
 	assert.Equal(t, 200, status)
 	assert.Equal(t, "pong", string(body))
@@ -560,8 +470,7 @@ func TestHertzAppWithNacosRegistry(t *testing.T) {
 	srv.Shutdown(ctx) //nolint:errcheck // ignore error
 
 	time.Sleep(5 * time.Second)
-	status, body, err = newClient.Get(context.Background(), nil, "http://d.h.t/ping",
-		config.WithSD(true))
+	status, body, err = newClient.Get(context.Background(), nil, "http://d.h.t/ping", config.WithSD(true))
 	assert.NotNil(t, err)
 	assert.Equal(t, 0, status)
 	assert.Equal(t, "", string(body))

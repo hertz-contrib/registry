@@ -181,8 +181,8 @@ func TestMultipleInstances(t *testing.T) {
 		Clusters:    []string{clusterName},
 		HealthyOnly: true,
 	})
-	assert.Nil(t, err)
-	assert.Equal(t, nil, res)
+	assert.Equal(t, "instance list is empty", err.Error())
+	assert.Equal(t, 0, len(res))
 }
 
 // TestResolverResolve test Resolve a service.

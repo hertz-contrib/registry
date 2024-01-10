@@ -4,11 +4,20 @@
 # returns an array contains mod path
 function util::find_modules() {
 	find . -not \( \
-		\( \
-		-path './output' \
-		-o -path './.git' \
-		-o -path '*/third_party/*' \
-		-o -path '*/vendor/*' \
-		\) -prune \
-		\) -name 'go.mod' -print0 | xargs -0 -I {} dirname {}
+  		\( \
+  		-path './output' \
+  		-o -path './.git' \
+  		-o -path '*/third_party/*' \
+  		-o -path '*/vendor/*' \
+  		\) -prune \
+  		\) -name 'go.mod' -print0 | xargs -0 -I {} dirname {} | grep './nacos/v2' && find . -not \( \
+  		\( \
+  		-path './output' \
+  		-o -path './.git' \
+  		-o -path '*/third_party/*' \
+  		-o -path '*/vendor/*' \
+  		\) -prune \
+  		\) -name 'go.mod' -print0 | xargs -0 -I {} dirname {} | grep -v './nacos/v2'
+
 }
+

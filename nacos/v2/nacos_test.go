@@ -182,7 +182,7 @@ func TestMultipleInstances(t *testing.T) {
 		HealthyOnly: true,
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(res))
+	assert.Equal(t, nil, res)
 }
 
 // TestResolverResolve test Resolve a service.

@@ -161,7 +161,6 @@ func TestMultipleInstances(t *testing.T) {
 		ServiceName: svcName,
 		GroupName:   groupName,
 		Clusters:    []string{clusterName},
-		HealthyOnly: true,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(res))

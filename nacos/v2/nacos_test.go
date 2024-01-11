@@ -140,7 +140,7 @@ func TestRegistryAndDeregister(t *testing.T) {
 // TestMultipleInstances test registry multiple service,then deregister one
 func TestMultipleInstances(t *testing.T) {
 	var (
-		svcName     = "MultipleInstances"
+		svcName     = "_MultipleInstances"
 		clusterName = "TheCluster"
 		groupName   = "TheGroup"
 	)
@@ -161,6 +161,7 @@ func TestMultipleInstances(t *testing.T) {
 		ServiceName: svcName,
 		GroupName:   groupName,
 		Clusters:    []string{clusterName},
+		HealthyOnly: true,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(res))

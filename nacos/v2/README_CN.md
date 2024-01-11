@@ -234,5 +234,11 @@ func main() {
 
 ## 兼容性
 
-Nacos 2.0 和 1.X 版本的 nacos-sdk-go 是完全兼容的，[详情](https://nacos.io/en-us/docs/2.0.0-compatibility.html)
+- 使用 Nacos2.x 客户端
+
+- Nacos 2.x [详细信息](https://nacos.io/en-us/docs/v2/upgrading/2.0.0-compatibility.html)
+
+- Go 版本不低于 1.16
+
+- 支持Nacos 2.x
 

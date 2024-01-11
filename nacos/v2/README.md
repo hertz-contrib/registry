@@ -232,7 +232,13 @@ func main() {
 | serverPort               | 8848                               | nacos server port                 |
 | namespace                 |                                    | the namespaceId of nacos          |
 
+
 ## Compatibility
 
-The server of Nacos2.0 is fully compatible with 1.X
-nacos-sdk-go. [see](https://nacos.io/en-us/docs/2.0.0-compatibility.html)
+- This package use Nacos2.x client.
+
+- Nacos2.x detail [see](https://nacos.io/en-us/docs/v2/upgrading/2.0.0-compatibility.html)
+
+- Supported Go version over 1.16
+
+- Supported Nacos version over 2.x

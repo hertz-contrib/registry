@@ -94,12 +94,21 @@ func (c *consulRegistry) Register(info *registry.Info) error {
 		return fmt.Errorf("getting service id failed, err: %w", err)
 	}
 
+	tags, err := convTagMapToSlice(info.Tags)
+	if err == nil {
+		for _, tag := range c.opts.AdditionInfo.Tags {
+			if !inArray(tag, tags) {
+				tags = append(tags, tag)
+			}
+		}
+	}
+
 	svcInfo := &api.AgentServiceRegistration{
 		ID:      svcID,
 		Name:    info.ServiceName,
 		Address: host,
 		Port:    port,
-		Tags:    c.opts.AdditionInfo.Tags,
+		Tags:    tags,
 		Meta:    c.opts.AdditionInfo.Meta,
 		Weights: &api.AgentWeights{
 			Passing: info.Weight,

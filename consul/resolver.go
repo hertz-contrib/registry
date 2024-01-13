@@ -60,11 +60,12 @@ func (c *consulResolver) Resolve(_ context.Context, desc string) (discovery.Resu
 		if svc == nil || svc.Address == "" {
 			continue
 		}
+		tags := splitTags(svc.Tags)
 		eps = append(eps, discovery.NewInstance(
 			defaultNetwork,
 			net.JoinHostPort(svc.Address, fmt.Sprintf("%d", svc.Port)),
 			svc.Weights.Passing,
-			svc.Meta,
+			tags,
 		))
 	}
 

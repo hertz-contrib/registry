@@ -15,12 +15,19 @@
 package consul
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 )
+
+const kvJoinChar = ":"
+
+var errIllegalTagChar = errors.New("illegal tag character")
 
 func parseAddr(addr net.Addr) (host string, port int, err error) {
 	host, portStr, err := net.SplitHostPort(addr.String())
@@ -29,7 +36,16 @@ func parseAddr(addr net.Addr) (host string, port int, err error) {
 	}
 
 	if host == "" || host == "::" {
-		return "", 0, fmt.Errorf("empty host")
+		detectHost := utils.LocalIP()
+		if detectHost == utils.UNKNOWN_IP_ADDR {
+			return "", 0, fmt.Errorf("get local ip error")
+		}
+
+		host, _, err = net.SplitHostPort(detectHost)
+
+		if err != nil {
+			return "", 0, fmt.Errorf("empty host")
+		}
 	}
 
 	port, err = strconv.Atoi(portStr)
@@ -49,4 +65,57 @@ func getServiceId(info *registry.Info) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%s:%s:%d", info.ServiceName, host, port), nil
+}
+
+// convTagMapToSlice Tags map be convert to slice.
+// Keys must not contain `:`.
+func convTagMapToSlice(tagMap map[string]string) ([]string, error) {
+	svcTags := make([]string, 0, len(tagMap))
+	for k, v := range tagMap {
+		var tag string
+		if strings.Contains(k, kvJoinChar) {
+			return svcTags, errIllegalTagChar
+		}
+		if v == "" {
+			tag = k
+		} else {
+			tag = fmt.Sprintf("%s%s%s", k, kvJoinChar, v)
+		}
+		svcTags = append(svcTags, tag)
+	}
+	return svcTags, nil
+}
+
+// splitTags Tags characters be separated to map.
+func splitTags(tags []string) map[string]string {
+	n := len(tags)
+	tagMap := make(map[string]string, n)
+	if n == 0 {
+		return tagMap
+	}
+
+	for _, tag := range tags {
+		if tag == "" {
+			continue
+		}
+		strArr := strings.SplitN(tag, kvJoinChar, 2)
+		if len(strArr) == 2 {
+			key := strArr[0]
+			tagMap[key] = strArr[1]
+		}
+		if len(strArr) == 1 {
+			tagMap[strArr[0]] = ""
+		}
+	}
+
+	return tagMap
+}
+
+func inArray(needle string, haystack []string) bool {
+	for _, k := range haystack {
+		if needle == k {
+			return true
+		}
+	}
+	return false
 }

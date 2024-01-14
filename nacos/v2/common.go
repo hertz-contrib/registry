@@ -39,7 +39,7 @@ func newDefaultNacosConfig() (naming_client.INamingClient, error) {
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig(
 			GetAddr(),
-			uint64(GetPort()),
+			uint64(Getdf()),
 			constant.WithContextPath("/nacos"),
 			constant.WithScheme("http"),
 		),
@@ -61,8 +61,8 @@ func newDefaultNacosConfig() (naming_client.INamingClient, error) {
 	return client, nil
 }
 
-// GetPort Get Nacos port from environment variables.
-func GetPort() int64 {
+// Getdf Get Nacos port from environment variables.
+func Getdf() int64 {
 	portText := os.Getenv(nacosEnvServerPort)
 	if len(portText) == 0 {
 		return nacosDefaultPort

@@ -31,11 +31,15 @@ type redisResolver struct {
 
 // NewRedisResolver creates a redis resolver
 func NewRedisResolver(addr string, opts ...Option) discovery.Resolver {
-	redisOpts := &redis.Options{Addr: addr}
-	for _, opt := range opts {
-		opt(redisOpts)
+	options := &Options{
+		Options: &redis.Options{
+			Addr: addr,
+		},
 	}
-	rdb := redis.NewClient(redisOpts)
+	for _, opt := range opts {
+		opt(options)
+	}
+	rdb := redis.NewClient(options.Options)
 	return &redisResolver{
 		client: rdb,
 	}

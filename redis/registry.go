@@ -27,9 +27,10 @@ import (
 var _ registry.Registry = (*redisRegistry)(nil)
 
 type redisRegistry struct {
-	client *redis.Client
-	rctx   *registryContext
-	mu     sync.Mutex
+	mu      sync.Mutex
+	options *Options
+	client  *redis.Client
+	rctx    *registryContext
 }
 
 type registryContext struct {
@@ -39,17 +40,22 @@ type registryContext struct {
 
 // NewRedisRegistry creates a redis registry
 func NewRedisRegistry(addr string, opts ...Option) registry.Registry {
-	redisOpts := &redis.Options{
-		Addr:     addr,
-		Password: "",
-		DB:       0,
+	options := &Options{
+		Options: &redis.Options{
+			Addr:     addr,
+			Password: "",
+			DB:       0,
+		},
+		expireTime:      defaultExpireTime,
+		refreshInterval: defaultRefreshInterval,
 	}
 	for _, opt := range opts {
-		opt(redisOpts)
+		opt(options)
 	}
-	rdb := redis.NewClient(redisOpts)
+	rdb := redis.NewClient(options.Options)
 	return &redisRegistry{
-		client: rdb,
+		options: options,
+		client:  rdb,
 	}
 }
 
@@ -77,7 +83,7 @@ func (r *redisRegistry) Register(info *registry.Info) error {
 	args := []interface{}{
 		hash.field,
 		hash.value,
-		defaultExpireTime,
+		r.options.expireTime,
 	}
 
 	err = registerScript.Run(rctx.ctx, rdb, keys, args).Err()

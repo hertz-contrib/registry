@@ -54,16 +54,8 @@ func main() {
 		Timeout:                        "5s",
 		DeregisterCriticalServiceAfter: "15s",
 	}
-	// custom addition info
-	additionInfo := &consul.AdditionInfo{
-		Tags: []string{"tag1", "tag2"},
-		Meta: map[string]string{
-			"meta1": "val1",
-			"meta2": "val2",
-		},
-	}
 	r := consul.NewConsulRegister(consulClient,
-		consul.WithCheck(check), consul.WithAdditionInfo(additionInfo),
+		consul.WithCheck(check),
 	)
 
 	wg.Add(2)

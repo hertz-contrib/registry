@@ -67,7 +67,7 @@ func getServiceId(info *registry.Info) (string, error) {
 	return fmt.Sprintf("%s:%s:%d", info.ServiceName, host, port), nil
 }
 
-// convTagMapToSlice Tags map be convert to slice.
+// convTagMapToSlice Tags map be converted to slice.
 // Keys must not contain `:`.
 func convTagMapToSlice(tagMap map[string]string) ([]string, error) {
 	svcTags := make([]string, 0, len(tagMap))
@@ -109,13 +109,4 @@ func splitTags(tags []string) map[string]string {
 	}
 
 	return tagMap
-}
-
-func inArray(needle string, haystack []string) bool {
-	for _, k := range haystack {
-		if needle == k {
-			return true
-		}
-	}
-	return false
 }

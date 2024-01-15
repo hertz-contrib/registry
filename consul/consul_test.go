@@ -152,14 +152,6 @@ func TestConsulRegister(t *testing.T) {
 		return
 	}
 
-	info := &AdditionInfo{
-		Tags: []string{"tag1", "tag2", "tag3"},
-		Meta: map[string]string{
-			"meta1": "value1",
-			"meta2": "value2",
-		},
-	}
-
 	var (
 		testSvcName   = "hertz.test.demo1"
 		testSvcPort   = fmt.Sprintf("%d", 8581)
@@ -167,7 +159,7 @@ func TestConsulRegister(t *testing.T) {
 		testSvcWeight = 777
 	)
 
-	r := NewConsulRegister(consulClient, WithAdditionInfo(info))
+	r := NewConsulRegister(consulClient)
 	h := server.Default(
 		server.WithHostPorts(testSvcAddr),
 		server.WithRegistry(r, &registry.Info{
@@ -193,8 +185,6 @@ func TestConsulRegister(t *testing.T) {
 		assert.Equal(t, testSvcName, gotSvc.Service)
 		assert.Equal(t, testSvcAddr, net.JoinHostPort(gotSvc.Address, fmt.Sprintf("%d", gotSvc.Port)))
 		assert.Equal(t, testSvcWeight, gotSvc.Weights.Passing)
-		assert.Equal(t, info.Tags, gotSvc.Tags)
-		assert.Equal(t, info.Meta, gotSvc.Meta)
 	}
 }
 

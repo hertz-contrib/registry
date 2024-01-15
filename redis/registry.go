@@ -16,10 +16,12 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"sync"
 
+	"github.com/bytedance/gopkg/util/gopool"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 var _ registry.Registry = (*redisRegistry)(nil)
@@ -28,7 +30,6 @@ type redisRegistry struct {
 	client *redis.Client
 	rctx   *registryContext
 	mu     sync.Mutex
-	wg     sync.WaitGroup
 }
 
 type registryContext struct {
@@ -56,20 +57,20 @@ func (r *redisRegistry) Register(info *registry.Info) error {
 	if err := validateRegistryInfo(info); err != nil {
 		return err
 	}
+
 	rctx := registryContext{}
 	rctx.ctx, rctx.cancel = context.WithCancel(context.Background())
-	m := newMentor()
-	r.wg.Add(1)
-	go m.subscribe(rctx.ctx, info, r)
-	r.wg.Wait()
 	rdb := r.client
+
 	hash, err := prepareRegistryHash(info)
 	if err != nil {
 		return err
 	}
+
 	r.mu.Lock()
 	r.rctx = &rctx
 	r.mu.Unlock()
+
 	keys := []string{
 		hash.key,
 	}
@@ -77,14 +78,16 @@ func (r *redisRegistry) Register(info *registry.Info) error {
 		hash.field,
 		hash.value,
 		defaultExpireTime,
-		generateMsg(register, info.ServiceName, info.Addr.String()),
 	}
+
 	err = registerScript.Run(rctx.ctx, rdb, keys, args).Err()
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return err
 	}
-	go m.monitorTTL(rctx.ctx, hash, info, r)
-	go keepAlive(rctx.ctx, hash, r)
+
+	gopool.Go(func() {
+		keepAlive(rctx.ctx, hash, r)
+	})
 	return nil
 }
 
@@ -92,23 +95,27 @@ func (r *redisRegistry) Deregister(info *registry.Info) error {
 	if err := validateRegistryInfo(info); err != nil {
 		return err
 	}
+
 	rctx := r.rctx
 	rdb := r.client
+
 	hash, err := prepareRegistryHash(info)
 	if err != nil {
 		return err
 	}
+
 	keys := []string{
 		hash.key,
 	}
 	args := []interface{}{
 		hash.field,
-		generateMsg(deregister, info.ServiceName, info.Addr.String()),
 	}
+
 	err = deregisterScript.Run(rctx.ctx, rdb, keys, args).Err()
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return err
 	}
+
 	rctx.cancel()
 	return nil
 }
@@ -118,18 +125,14 @@ local key = KEYS[1]
 local field = ARGV[1]
 local value = ARGV[2]
 local expireTime = tonumber(ARGV[3])
-local message = ARGV[4]
 
 redis.call('HSET', key, field, value)
 redis.call('EXPIRE', key, expireTime)
-redis.call('PUBLISH', key, message)
 `)
 
 var deregisterScript = redis.NewScript(`
 local key = KEYS[1]
 local field = ARGV[1]
-local message = ARGV[2]
 
 redis.call('HDEL', key, field)
-redis.call('PUBLISH', key, message)
 `)

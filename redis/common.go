@@ -23,23 +23,20 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
-	Redis      = "redis"
-	register   = "register"
-	deregister = "deregister"
-	hertz      = "hertz"
-	server     = "server"
-	tcp        = "tcp"
+	Redis  = "redis"
+	hertz  = "hertz"
+	server = "server"
+	tcp    = "tcp"
 )
 
 const (
 	defaultExpireTime    = 60
 	defaultTickerTime    = time.Second * 30
 	defaultKeepAliveTime = time.Second * 60
-	defaultMonitorTime   = time.Second * 30
 	defaultWeight        = 10
 )
 
@@ -109,10 +106,6 @@ func validateRegistryInfo(info *registry.Info) error {
 
 func generateKey(serviceName, serviceType string) string {
 	return fmt.Sprintf("/%s/%s/%s", hertz, serviceName, serviceType)
-}
-
-func generateMsg(msgType, serviceName, serviceAddr string) string {
-	return fmt.Sprintf("%s-%s-%s", msgType, serviceName, serviceAddr)
 }
 
 func prepareRegistryHash(info *registry.Info) (*registryHash, error) {

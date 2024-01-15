@@ -193,13 +193,6 @@ func TestResolve(t *testing.T) {
 	}
 }
 
-// TestNewMentor test singleton
-func TestNewMentor(t *testing.T) {
-	m1 := newMentor()
-	m2 := newMentor()
-	assert.Equal(t, m1, m2)
-}
-
 // TestRedisRegistryWithHertz Test redis registry complete workflow (service registry|service de-registry|service resolver) with hertz.
 func TestRedisRegistryWithHertz(t *testing.T) {
 	addr := "127.0.0.1:8080"

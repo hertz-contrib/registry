@@ -16,70 +16,25 @@ package redis
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/go-redis/redis/v8"
 )
 
 const (
-	Redis      = "redis"
-	register   = "register"
-	deregister = "deregister"
-	hertz      = "hertz"
-	server     = "server"
-	tcp        = "tcp"
+	Redis  = "redis"
+	hertz  = "hertz"
+	server = "server"
+	tcp    = "tcp"
 )
 
 const (
-	defaultExpireTime    = 60
-	defaultTickerTime    = time.Second * 30
-	defaultKeepAliveTime = time.Second * 60
-	defaultMonitorTime   = time.Second * 30
-	defaultWeight        = 10
+	defaultExpireTime      = 60
+	defaultRefreshInterval = 30
+	defaultWeight          = 10
 )
-
-type Option func(opts *redis.Options)
-
-func WithPassword(password string) Option {
-	return func(opts *redis.Options) {
-		opts.Password = password
-	}
-}
-
-func WithDB(db int) Option {
-	return func(opts *redis.Options) {
-		opts.DB = db
-	}
-}
-
-func WithTLSConfig(t *tls.Config) Option {
-	return func(opts *redis.Options) {
-		opts.TLSConfig = t
-	}
-}
-
-func WithDialer(dialer func(ctx context.Context, network, addr string) (net.Conn, error)) Option {
-	return func(opts *redis.Options) {
-		opts.Dialer = dialer
-	}
-}
-
-func WithReadTimeout(t time.Duration) Option {
-	return func(opts *redis.Options) {
-		opts.ReadTimeout = t
-	}
-}
-
-func WithWriteTimeout(t time.Duration) Option {
-	return func(opts *redis.Options) {
-		opts.WriteTimeout = t
-	}
-}
 
 type registryHash struct {
 	key   string
@@ -111,10 +66,6 @@ func generateKey(serviceName, serviceType string) string {
 	return fmt.Sprintf("/%s/%s/%s", hertz, serviceName, serviceType)
 }
 
-func generateMsg(msgType, serviceName, serviceAddr string) string {
-	return fmt.Sprintf("%s-%s-%s", msgType, serviceName, serviceAddr)
-}
-
 func prepareRegistryHash(info *registry.Info) (*registryHash, error) {
 	meta, err := sonic.Marshal(convertInfo(info))
 	if err != nil {
@@ -137,12 +88,12 @@ func convertInfo(info *registry.Info) *registryInfo {
 }
 
 func keepAlive(ctx context.Context, hash *registryHash, r *redisRegistry) {
-	ticker := time.NewTicker(defaultTickerTime)
+	ticker := time.NewTicker(time.Duration(r.options.refreshInterval) * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
-			r.client.Expire(ctx, hash.key, defaultKeepAliveTime)
+			r.client.Expire(ctx, hash.key, time.Duration(r.options.expireTime)*time.Second)
 		case <-ctx.Done():
 			break
 		}

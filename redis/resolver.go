@@ -20,7 +20,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 var _ discovery.Resolver = (*redisResolver)(nil)
@@ -31,11 +31,15 @@ type redisResolver struct {
 
 // NewRedisResolver creates a redis resolver
 func NewRedisResolver(addr string, opts ...Option) discovery.Resolver {
-	redisOpts := &redis.Options{Addr: addr}
-	for _, opt := range opts {
-		opt(redisOpts)
+	options := &Options{
+		Options: &redis.Options{
+			Addr: addr,
+		},
 	}
-	rdb := redis.NewClient(redisOpts)
+	for _, opt := range opts {
+		opt(options)
+	}
+	rdb := redis.NewClient(options.Options)
 	return &redisResolver{
 		client: rdb,
 	}

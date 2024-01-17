@@ -73,5 +73,5 @@ func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Res
 }
 
 func (r *redisResolver) Name() string {
-	return Redis
+	return "redis"
 }

@@ -24,7 +24,6 @@ import (
 )
 
 const (
-	Redis  = "redis"
 	hertz  = "hertz"
 	server = "server"
 	tcp    = "tcp"

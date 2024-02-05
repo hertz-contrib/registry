@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/hertz-contrib/registry/nacos/common"
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
@@ -31,8 +33,9 @@ var _ discovery.Resolver = (*nacosResolver)(nil)
 
 type (
 	resolverOptions struct {
-		cluster string
-		group   string
+		cluster      string
+		group        string
+		serverConfig []constant.ServerConfig
 	}
 
 	// ResolverOption Option is nacos registry option.
@@ -55,6 +58,13 @@ func WithResolverCluster(cluster string) ResolverOption {
 func WithResolverGroup(group string) ResolverOption {
 	return func(o *resolverOptions) {
 		o.group = group
+	}
+}
+
+// WithNacosServersConfig with server config option.
+func WithNacosServersConfig(cfg []constant.ServerConfig) ResolverOption {
+	return func(o *resolverOptions) {
+		o.serverConfig = cfg
 	}
 }
 
@@ -126,7 +136,12 @@ func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Resul
 }
 
 func (n *nacosResolver) Name() string {
-	return "nacos" + ":" + n.opts.cluster + ":" + n.opts.group
+	var name strings.Builder
+	name.WriteString("nacos" + ":" + n.opts.cluster + ":" + n.opts.group)
+	for _, config := range n.opts.serverConfig {
+		name.WriteString(":" + config.IpAddr + ":" + strconv.FormatUint(config.Port, 10))
+	}
+	return name.String()
 }
 
 // NewDefaultNacosResolver create a default service resolver using nacos.

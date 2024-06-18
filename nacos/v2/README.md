@@ -6,6 +6,12 @@ Nacos as service discovery for Hertz.
 
 ## How to use?
 
+### 
+- The nacos/v2 version of hertz does not currently support creating multiple port examples in the same group multiple times.
+- Service registration and discovery in nacos/v2 is compatible with previous versions.
+- `CustomLogger` type in constant.ClientConfig has been removed in nacos-sdk-go v2. Instead, use the `(github.com/nacos-group/nacos-sdk-go/v2/common/logger).SetLogger` to customize the log.
+- nacos/v2 only supports nacos 2.X version.
+
 ### Server
 
 **[example/standard/server/main.go](examples/standard/server/main.go)**
@@ -220,6 +226,25 @@ func main() {
 	r := nacos.NewNacosResolver(nacosCli)
 	cli.Use(sd.Discovery(r))
 	// ...
+}
+
+```
+
+### Custom Logger
+
+**[examples/logger/main.go](examples/logger/main.go)**
+
+```go
+package main
+
+import (
+	"github.com/hertz-contrib/registry/nacos/v2/common"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+)
+
+func main() {
+	logger.SetLogger(common.NewCustomNacosLogger())
+	logger.Info("Hello, Nacos!")
 }
 
 ```

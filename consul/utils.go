@@ -42,7 +42,6 @@ func parseAddr(addr net.Addr) (host string, port int, err error) {
 		}
 
 		host, _, err = net.SplitHostPort(detectHost)
-
 		if err != nil {
 			return "", 0, fmt.Errorf("empty host")
 		}

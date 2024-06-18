@@ -6,6 +6,13 @@
 
 ## 这个项目应当如何使用?
 
+### 注意
+
+- nacos/v2 版本中 hertz 目前不支持多次在同分组下创建多端口示例
+- nacos/v2 的服务注册与发现和先前的版本兼容
+- nacos-sdk-go v2 版本中 constant.ClientConfig 中 CustomLogger 类型被移除, 转而使用 (github.com/nacos-group/nacos-sdk-go/v2/common/logger).SetLogger 方法进行日志自定义
+- nacos/v2 只支持 nacos 2.X 版本
+
 ### 服务端
 
 **[example/server/main.go](examples/standard/server/main.go)**
@@ -74,6 +81,28 @@ func main() {
     client.Use(sd.Discovery(r))
 	// ...
 }
+```
+
+### 自定义日志
+
+**[examples/logger/main.go](examples/logger/main.go)**
+
+```go
+package main
+
+import (
+	"github.com/hertz-contrib/registry/nacos/v2/common"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+)
+
+func main() {
+	logger.InitLogger(logger.Config{
+		Level: "debug",
+	})
+	logger.SetLogger(common.NewCustomNacosLogger())
+	logger.Info("info")
+}
+
 ```
 
 ## 如何运行示例 ?

@@ -84,6 +84,28 @@ client, err := client.NewClient()
 
 ```
 
+### Custom Logger
+
+**[examples/logger/main.go](examples/logger/main.go)**
+
+```go
+package main
+
+import (
+	"github.com/hertz-contrib/registry/nacos/v2/common"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+)
+
+func main() {
+	logger.InitLogger(logger.Config{
+		Level: "debug",
+	})
+	logger.SetLogger(common.NewCustomNacosLogger())
+	logger.Info("info")
+}
+
+```
+
 ## How to run example?
 
 ### run docker
@@ -226,25 +248,6 @@ func main() {
 	r := nacos.NewNacosResolver(nacosCli)
 	cli.Use(sd.Discovery(r))
 	// ...
-}
-
-```
-
-### Custom Logger
-
-**[examples/logger/main.go](examples/logger/main.go)**
-
-```go
-package main
-
-import (
-	"github.com/hertz-contrib/registry/nacos/v2/common"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
-)
-
-func main() {
-	logger.SetLogger(common.NewCustomNacosLogger())
-	logger.Info("Hello, Nacos!")
 }
 
 ```

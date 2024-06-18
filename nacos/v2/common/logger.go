@@ -16,12 +16,12 @@ package common
 
 import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+	v2 "github.com/nacos-group/nacos-sdk-go/v2/common/logger"
 )
 
 type customNacosLogger struct{}
 
-func NewCustomNacosLogger() logger.Logger {
+func NewCustomNacosLogger() v2.Logger {
 	return customNacosLogger{}
 }
 

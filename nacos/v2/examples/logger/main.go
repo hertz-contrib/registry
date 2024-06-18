@@ -20,6 +20,9 @@ import (
 )
 
 func main() {
+	logger.InitLogger(logger.Config{
+		Level: "debug",
+	})
 	logger.SetLogger(common.NewCustomNacosLogger())
-	logger.Info("Hello, Nacos!")
+	logger.Info("info")
 }

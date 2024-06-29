@@ -265,7 +265,8 @@ func (e *etcdRegistry) getAddressOfRegistration(info *registry.Info) (string, er
 	}
 
 	// if host is empty or "::", use local ipv4 address as host
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host, err = getLocalIPv4Host()
 		if err != nil {
 			return "", fmt.Errorf("parse registry info addr error: %w", err)

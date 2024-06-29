@@ -88,7 +88,8 @@ func GetInfoHostAndPort(Addr string) (string, int, error) {
 	if port == "" {
 		return infoHost, 0, fmt.Errorf("registry info addr missing port")
 	}
-	if infoHost == "" || infoHost == "::" {
+	ip := net.ParseIP(infoHost)
+	if ip == nil || ip.IsUnspecified() {
 		infoHost = utils.LocalIP()
 		if infoHost == utils.UNKNOWN_IP_ADDR {
 			return "", 0, fmt.Errorf("get local ip error")

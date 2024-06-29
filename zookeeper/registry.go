@@ -120,7 +120,8 @@ func buildPath(info *registry.Info) (string, error) {
 	if port == "" {
 		return "", fmt.Errorf("registry info addr missing port")
 	}
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host = utils.LocalIP()
 	}
 	path = path + Separator + net.JoinHostPort(host, port)

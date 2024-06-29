@@ -264,7 +264,8 @@ func (scr *serviceCombRegistry) parseAddr(s string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("parse addr error: %w", err)
 	}
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host = utils.LocalIP()
 		if host == utils.UNKNOWN_IP_ADDR {
 			return "", errors.New("get local ip error")

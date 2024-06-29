@@ -35,7 +35,8 @@ func parseAddr(addr net.Addr) (host string, port int, err error) {
 		return "", 0, fmt.Errorf("calling net.SplitHostPort failed, addr: %s, err: %w", addr.String(), err)
 	}
 
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		detectHost := utils.LocalIP()
 		if detectHost == utils.UNKNOWN_IP_ADDR {
 			return "", 0, fmt.Errorf("get local ip error")

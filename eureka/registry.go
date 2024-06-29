@@ -175,7 +175,8 @@ func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, e
 	if portStr == "" {
 		return nil, fmt.Errorf("registry info addr missing port")
 	}
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host = utils.LocalIP()
 		if host == utils.UNKNOWN_IP_ADDR {
 			return nil, fmt.Errorf("get local ip error")

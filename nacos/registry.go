@@ -71,7 +71,8 @@ func (n *nacosRegistry) Register(info *registry.Info) error {
 	if err != nil {
 		return fmt.Errorf("parse registry info port error: %w", err)
 	}
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host = utils.LocalIP()
 	}
 	success, err := n.client.RegisterInstance(vo.RegisterInstanceParam{
@@ -121,7 +122,8 @@ func (n *nacosRegistry) Deregister(info *registry.Info) error {
 	if err != nil {
 		return fmt.Errorf("parse registry info port error: %w", err)
 	}
-	if host == "" || host == "::" {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
 		host = utils.LocalIP()
 	}
 	success, err := n.client.DeregisterInstance(vo.DeregisterInstanceParam{

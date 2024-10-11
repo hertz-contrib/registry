@@ -21,43 +21,15 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-type consulRegistry struct {
-	registry registry.Registry
-}
-
-var _ registry.Registry = (*consulRegistry)(nil)
-
-type options struct {
-	cfgs []cwOption.Option
-}
-
 // Option is the option of Consul.
-type Option func(o *options)
+type Option = cwOption.Option
 
 // WithCheck is consul registry option to set AgentServiceCheck.
 func WithCheck(check *api.AgentServiceCheck) Option {
-	return func(o *options) {
-		o.cfgs = append(o.cfgs, cwOption.WithCheck(check))
-	}
+	return cwOption.WithCheck(check)
 }
 
 // NewConsulRegister create a new registry using consul.
 func NewConsulRegister(consulClient *api.Client, opts ...Option) registry.Registry {
-	o := options{}
-
-	for _, opt := range opts {
-		opt(&o)
-	}
-
-	return &consulRegistry{registry: consulhertz.NewConsulRegister(consulClient, o.cfgs...)}
-}
-
-// Register register a service to consul.
-func (c *consulRegistry) Register(info *registry.Info) error {
-	return c.registry.Register(info)
-}
-
-// Deregister deregister a service from consul.
-func (c *consulRegistry) Deregister(info *registry.Info) error {
-	return c.registry.Deregister(info)
+	return consulhertz.NewConsulRegister(consulClient, opts...)
 }

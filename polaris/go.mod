@@ -61,4 +61,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/polaris => ../../cwgo-pkg/registry/polaris
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/polaris => ../../cwgo-pkg-registry/registry/polaris

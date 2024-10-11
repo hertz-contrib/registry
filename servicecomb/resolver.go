@@ -15,101 +15,40 @@
 package servicecomb
 
 import (
-	"context"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/servicecomb/options"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/servicecomb/servicecombhertz"
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/go-chassis/sc-client"
 )
 
-var _ discovery.Resolver = (*serviceCombResolver)(nil)
-
 type resolverOptions struct {
-	appId       string
-	versionRule string
-	consumerId  string
+	options []options.ResolverOption
 }
 
 // ResolverOption is service-comb resolver option.
-type ResolverOption func(o *resolverOptions)
+type ResolverOption = options.ResolverOption
 
 // WithResolverAppId with appId option.
 func WithResolverAppId(appId string) ResolverOption {
-	return func(o *resolverOptions) { o.appId = appId }
+	return options.WithResolverAppId(appId)
 }
 
 // WithResolverVersionRule with versionRule option.
 func WithResolverVersionRule(versionRule string) ResolverOption {
-	return func(o *resolverOptions) { o.versionRule = versionRule }
+	return options.WithResolverVersionRule(versionRule)
 }
 
 // WithResolverConsumerId with consumerId option.
 func WithResolverConsumerId(consumerId string) ResolverOption {
-	return func(o *resolverOptions) { o.consumerId = consumerId }
-}
-
-type serviceCombResolver struct {
-	cli  *sc.Client
-	opts resolverOptions
+	return options.WithResolverConsumerId(consumerId)
 }
 
 func NewDefaultSCResolver(endPoints []string, opts ...ResolverOption) (discovery.Resolver, error) {
-	client, err := sc.NewClient(sc.Options{
-		Endpoints: endPoints,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return NewSCResolver(client, opts...), nil
+	return servicecombhertz.NewDefaultSCResolver(endPoints, opts...)
 }
 
 func NewSCResolver(cli *sc.Client, opts ...ResolverOption) discovery.Resolver {
-	op := resolverOptions{
-		appId:       "DEFAULT",
-		versionRule: "latest",
-		consumerId:  "",
-	}
-	for _, option := range opts {
-		option(&op)
-	}
-	return &serviceCombResolver{
-		cli:  cli,
-		opts: op,
-	}
-}
+	return servicecombhertz.NewSCResolver(cli, opts...)
 
-// Target return a description for the given target that is suitable for being a key for cache.
-func (*serviceCombResolver) Target(_ context.Context, target *discovery.TargetInfo) (description string) {
-	return target.Host
-}
-
-// Resolve a service info by desc.
-func (scr *serviceCombResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
-	res, err := scr.cli.FindMicroServiceInstances(scr.opts.consumerId, scr.opts.appId, desc, scr.opts.versionRule, sc.WithoutRevision())
-	if err != nil {
-		return discovery.Result{}, err
-	}
-	instances := make([]discovery.Instance, 0, len(res))
-	for _, in := range res {
-		if in.Status != sc.MSInstanceUP {
-			continue
-		}
-		for _, endPoint := range in.Endpoints {
-			instances = append(instances, discovery.NewInstance(
-				"tcp",
-				endPoint,
-				10,
-				in.Properties))
-		}
-	}
-
-	return discovery.Result{
-		CacheKey:  desc,
-		Instances: instances,
-	}, nil
-}
-
-// Name returns the name of the resolver.
-func (scr *serviceCombResolver) Name() string {
-	return "sc-resolver" + ":" + scr.opts.appId + ":" + scr.opts.versionRule
 }

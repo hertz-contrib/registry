@@ -18,73 +18,31 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 
-	cwNacos "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz"
-	cwOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
+	nacoshertz "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz"
+	nacosOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
 )
 
-var _ registry.Registry = (*nacosRegistry)(nil)
-
 type (
-	nacosRegistry struct {
-		registry registry.Registry
-	}
-
-	registryOptions struct {
-		cfgs []cwOption.Option
-	}
-
 	// RegistryOption Option is nacos registry option.
-	RegistryOption func(o *registryOptions)
+	RegistryOption = nacosOption.Option
 )
 
 // WithRegistryCluster with cluster option.
 func WithRegistryCluster(cluster string) RegistryOption {
-	return func(o *registryOptions) {
-		o.cfgs = append(o.cfgs, cwOption.WithCluster(cluster))
-	}
+	return nacosOption.WithCluster(cluster)
 }
 
 // WithRegistryGroup with group option.
 func WithRegistryGroup(group string) RegistryOption {
-	return func(o *registryOptions) {
-		o.cfgs = append(o.cfgs, cwOption.WithGroup(group))
-	}
-}
-
-func (n *nacosRegistry) Register(info *registry.Info) error {
-	return n.registry.Register(info)
-}
-
-func (n *nacosRegistry) Deregister(info *registry.Info) error {
-	return n.registry.Deregister(info)
+	return nacosOption.WithGroup(group)
 }
 
 // NewDefaultNacosRegistry create a default service registry using nacos.
 func NewDefaultNacosRegistry(opts ...RegistryOption) (registry.Registry, error) {
-	cfgs := transferRegistryOptions(opts...)
-
-	nacosRegistry, err := cwNacos.NewDefaultNacosRegistry(cfgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	return nacosRegistry, nil
+	return nacoshertz.NewDefaultNacosRegistry(opts...)
 }
 
 // NewNacosRegistry create a new registry using nacos.
 func NewNacosRegistry(client naming_client.INamingClient, opts ...RegistryOption) registry.Registry {
-	cfgs := transferRegistryOptions(opts...)
-
-	return &nacosRegistry{registry: cwNacos.NewNacosRegistry(client, cfgs...)}
-}
-
-// transferRegistryOptions transfer registry options to options in cwgo-pkg.
-func transferRegistryOptions(opts ...RegistryOption) []cwOption.Option {
-	o := &registryOptions{}
-
-	for _, opt := range opts {
-		opt(o)
-	}
-
-	return o.cfgs
+	return nacoshertz.NewNacosRegistry(client, opts...)
 }

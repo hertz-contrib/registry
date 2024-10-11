@@ -15,70 +15,12 @@
 package etcd
 
 import (
-	"context"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/etcd/etcdhertz"
 
-	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	clientv3 "go.etcd.io/etcd/client/v3"
 )
-
-var _ discovery.Resolver = (*etcdResolver)(nil)
-
-type etcdResolver struct {
-	etcdClient *clientv3.Client
-}
 
 // NewEtcdResolver creates a etcd based resolver.
 func NewEtcdResolver(endpoints []string, opts ...Option) (discovery.Resolver, error) {
-	cfg := &option{
-		etcdCfg: clientv3.Config{
-			Endpoints: endpoints,
-		},
-	}
-	cfg.apply(opts...)
-	etcdClient, err := clientv3.New(cfg.etcdCfg)
-	if err != nil {
-		return nil, err
-	}
-	return &etcdResolver{
-		etcdClient: etcdClient,
-	}, nil
-}
-
-// Resolve implements the Resolver interface.
-func (e *etcdResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
-	path := desc + "/"
-	prefix := serviceKeyPrefix(path)
-	resp, err := e.etcdClient.Get(ctx, prefix, clientv3.WithPrefix())
-	if err != nil {
-		return discovery.Result{}, err
-	}
-	var eps []discovery.Instance
-	for _, kv := range resp.Kvs {
-		var info instanceInfo
-		err := sonic.Unmarshal(kv.Value, &info)
-		if err != nil {
-			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore key: %v", err, string(kv.Key))
-			continue
-		}
-		weight := info.Weight
-		if weight <= 0 {
-			weight = registry.DefaultWeight
-		}
-		eps = append(eps, discovery.NewInstance(info.Network, info.Address, weight, info.Tags))
-	}
-	return discovery.Result{
-		CacheKey:  desc,
-		Instances: eps,
-	}, nil
-}
-
-func (e *etcdResolver) Name() string {
-	return "etcd"
-}
-
-func (e *etcdResolver) Target(ctx context.Context, target *discovery.TargetInfo) string {
-	return target.Host
+	return etcdhertz.NewEtcdResolver(endpoints, opts...)
 }

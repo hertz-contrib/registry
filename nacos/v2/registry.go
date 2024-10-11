@@ -18,23 +18,15 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 
-	cwNacos "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz/v2"
+	nacoshertz "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz/v2"
 	cwOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
-)
-
-var _ registry.Registry = (*nacosRegistry)(nil)
-
-type (
-	nacosRegistry struct {
-		registry registry.Registry
-	}
 )
 
 // NewDefaultNacosRegistry create a default service registry using nacos.
 func NewDefaultNacosRegistry(opts ...RegistryOption) (registry.Registry, error) {
 	cfgs := transferRegistryOptions(opts...)
 
-	nacosRegistry, err := cwNacos.NewDefaultNacosRegistry(cfgs...)
+	nacosRegistry, err := nacoshertz.NewDefaultNacosRegistry(cfgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,17 +37,7 @@ func NewDefaultNacosRegistry(opts ...RegistryOption) (registry.Registry, error) 
 // NewNacosRegistry create a new registry using nacos.
 func NewNacosRegistry(client naming_client.INamingClient, opts ...RegistryOption) registry.Registry {
 	cfgs := transferRegistryOptions(opts...)
-	return &nacosRegistry{
-		registry: cwNacos.NewNacosRegistry(client, cfgs...),
-	}
-}
-
-func (n *nacosRegistry) Register(info *registry.Info) error {
-	return n.registry.Register(info)
-}
-
-func (n *nacosRegistry) Deregister(info *registry.Info) error {
-	return n.registry.Deregister(info)
+	return nacoshertz.NewNacosRegistry(client, cfgs...)
 }
 
 func transferRegistryOptions(opts ...RegistryOption) []cwOption.Option {

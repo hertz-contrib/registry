@@ -18,15 +18,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/etcd/etcdhertz"
 	"io/ioutil"
-	"os"
-	"strconv"
 	"time"
-
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
@@ -35,46 +29,33 @@ const (
 
 type option struct {
 	// etcd client config
-	etcdCfg  clientv3.Config
-	retryCfg *retryCfg
+	options []etcdhertz.Option
 }
 
-type retryCfg struct {
+/*type retryCfg struct {
 	// The maximum number of call attempt times, including the initial call
 	maxAttemptTimes uint
 	// observeDelay is the delay time for checking the service status under normal conditions
 	observeDelay time.Duration
 	// retryDelay is the delay time for attempting to register the service after disconnecting
 	retryDelay time.Duration
-}
+}*/
 
-type Option func(o *option)
+type Option = etcdhertz.Option
 
 // WithMaxAttemptTimes sets the maximum number of call attempt times, including the initial call
 func WithMaxAttemptTimes(maxAttemptTimes uint) Option {
-	return func(o *option) {
-		o.retryCfg.maxAttemptTimes = maxAttemptTimes
-	}
+	return etcdhertz.WithMaxAttemptTimes(maxAttemptTimes)
 }
 
 // WithObserveDelay sets the delay time for checking the service status under normal conditions
 func WithObserveDelay(observeDelay time.Duration) Option {
-	return func(o *option) {
-		o.retryCfg.observeDelay = observeDelay
-	}
+	return etcdhertz.WithObserveDelay(observeDelay)
 }
 
 // WithRetryDelay sets the delay time of retry
 func WithRetryDelay(t time.Duration) Option {
-	return func(o *option) {
-		o.retryCfg.retryDelay = t
-	}
-}
-
-func (o *option) apply(opts ...Option) {
-	for _, opt := range opts {
-		opt(o)
-	}
+	return etcdhertz.WithRetryDelay(t)
 }
 
 // instanceInfo used to stored service basic info in etcd.
@@ -94,48 +75,14 @@ func serviceKey(serviceName, addr string) string {
 	return serviceKeyPrefix(serviceName) + "/" + addr
 }
 
-// validateRegistryInfo validate the registry.Info
-func validateRegistryInfo(info *registry.Info) error {
-	if info == nil {
-		return fmt.Errorf("registry.Info can not be empty")
-	}
-	if info.ServiceName == "" {
-		return fmt.Errorf("registry.Info ServiceName can not be empty")
-	}
-	if info.Addr == nil {
-		return fmt.Errorf("registry.Info Addr can not be empty")
-	}
-	return nil
-}
-
-// getTTL get the lease from default or from the env
-func getTTL() int64 {
-	var ttl int64 = defaultTTL
-	if str, ok := os.LookupEnv(ttlKey); ok {
-		if t, err := strconv.Atoi(str); err == nil {
-			ttl = int64(t)
-		}
-	}
-	return ttl
-}
-
 // WithTLSOpt returns a option that authentication by tls/ssl.
 func WithTLSOpt(certFile, keyFile, caFile string) Option {
-	return func(o *option) {
-		tlsCfg, err := newTLSConfig(certFile, keyFile, caFile, "")
-		if err != nil {
-			hlog.Errorf("HERTZ: tls failed with err: %v , skipping tls.", err)
-		}
-		o.etcdCfg.TLS = tlsCfg
-	}
+	return etcdhertz.WithTLSOpt(certFile, keyFile, caFile)
 }
 
 // WithAuthOpt returns an option that authentication by username and password.
 func WithAuthOpt(username, password string) Option {
-	return func(o *option) {
-		o.etcdCfg.Username = username
-		o.etcdCfg.Password = password
-	}
+	return etcdhertz.WithAuthOpt(username, password)
 }
 
 func newTLSConfig(certFile, keyFile, caFile, serverName string) (*tls.Config, error) {

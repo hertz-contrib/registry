@@ -48,4 +48,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/nacos => ../../cwgo-pkg/registry/nacos
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/nacos => ../../cwgo-pkg-registry/registry/nacos

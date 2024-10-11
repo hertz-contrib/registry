@@ -17,39 +17,13 @@
 package polaris
 
 import (
-	"context"
-
-	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-
-	cwPolaris "github.com/cloudwego-contrib/cwgo-pkg/registry/polaris/polarishertz"
+	polarishertz "github.com/cloudwego-contrib/cwgo-pkg/registry/polaris/polarishertz"
 )
 
 // Resolver is extension interface of Hertz discovery.Resolver.
-type Resolver interface {
-	discovery.Resolver
-}
-
-// polarisResolver is a resolver using polaris.
-type polarisResolver struct {
-	resolver cwPolaris.Resolver
-}
+type Resolver = polarishertz.Resolver
 
 // NewPolarisResolver creates a polaris based resolver.
 func NewPolarisResolver(configFile ...string) (Resolver, error) {
-	return cwPolaris.NewPolarisResolver(configFile...)
-}
-
-// Target implements the Resolver interface.
-func (polaris *polarisResolver) Target(ctx context.Context, target *discovery.TargetInfo) string {
-	return polaris.resolver.Target(ctx, target)
-}
-
-// Resolve implements the Resolver interface.
-func (polaris *polarisResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
-	return polaris.resolver.Resolve(ctx, desc)
-}
-
-// Name implements the Resolver interface.
-func (polaris *polarisResolver) Name() string {
-	return polaris.resolver.Name()
+	return polarishertz.NewPolarisResolver(configFile...)
 }

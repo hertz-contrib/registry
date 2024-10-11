@@ -20,27 +20,7 @@ import (
 	cwRedis "github.com/cloudwego-contrib/cwgo-pkg/registry/redis/redishertz"
 )
 
-var _ registry.Registry = (*redisRegistry)(nil)
-
-type redisRegistry struct {
-	registry registry.Registry
-}
-
 // NewRedisRegistry creates a redis registry
 func NewRedisRegistry(addr string, opts ...Option) registry.Registry {
-	o := Options{}
-
-	for _, opt := range opts {
-		opt(&o)
-	}
-
-	return cwRedis.NewRedisRegistry(addr, o.cfgs...)
-}
-
-func (r *redisRegistry) Register(info *registry.Info) error {
-	return r.registry.Register(info)
-}
-
-func (r *redisRegistry) Deregister(info *registry.Info) error {
-	return r.registry.Deregister(info)
+	return cwRedis.NewRedisRegistry(addr, opts...)
 }

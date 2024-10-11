@@ -15,84 +15,36 @@
 package nacos
 
 import (
-	"context"
-
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 
-	cwNacos "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz"
-	cwOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
+	nacoshertz "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz"
+	nacosOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
 )
 
-var _ discovery.Resolver = (*nacosResolver)(nil)
-
 type (
-	resolverOptions struct {
-		cgfs []cwOption.ResolverOption
-	}
-
 	// ResolverOption Option is nacos registry option.
-	ResolverOption func(o *resolverOptions)
-
-	nacosResolver struct {
-		resolver discovery.Resolver
-	}
+	ResolverOption = nacosOption.ResolverOption
 )
 
 // WithResolverCluster with cluster option.
 func WithResolverCluster(cluster string) ResolverOption {
-	return func(o *resolverOptions) {
-		o.cgfs = append(o.cgfs, cwOption.WithResolverCluster(cluster))
-	}
+	return nacosOption.WithResolverCluster(cluster)
 }
 
 // WithResolverGroup with group option.
 func WithResolverGroup(group string) ResolverOption {
-	return func(o *resolverOptions) {
-		o.cgfs = append(o.cgfs, cwOption.WithResolverGroup(group))
-	}
-}
-
-func (n *nacosResolver) Target(ctx context.Context, target *discovery.TargetInfo) string {
-	return n.resolver.Target(ctx, target)
-}
-
-func (n *nacosResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
-	return n.resolver.Resolve(ctx, desc)
-}
-
-func (n *nacosResolver) Name() string {
-	return n.resolver.Name()
+	return nacosOption.WithResolverGroup(group)
 }
 
 // NewDefaultNacosResolver create a default service resolver using nacos.
 func NewDefaultNacosResolver(opts ...ResolverOption) (discovery.Resolver, error) {
-	cfgs := transferResolverOption(opts...)
-
-	nacosResolver, err := cwNacos.NewDefaultNacosResolver(cfgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	return nacosResolver, nil
+	return nacoshertz.NewDefaultNacosResolver(opts...)
 }
 
 // NewNacosResolver create a service resolver using nacos.
 func NewNacosResolver(cli naming_client.INamingClient, opts ...ResolverOption) discovery.Resolver {
-	cfgs := transferResolverOption(opts...)
-
-	return &nacosResolver{resolver: cwNacos.NewNacosResolver(cli, cfgs...)}
-}
-
-// transferResolverOption transfer local ResolverOption to ResolverOption in cwgo-pkg.
-func transferResolverOption(opts ...ResolverOption) []cwOption.ResolverOption {
-	o := &resolverOptions{}
-
-	for _, opt := range opts {
-		opt(o)
-	}
-
-	return o.cgfs
+	return nacoshertz.NewNacosResolver(cli, opts...)
 }
 
 // compareMaps compares two maps regardless of nil or empty

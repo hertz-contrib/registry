@@ -18,17 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/url"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/client"
-	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -37,7 +31,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/stretchr/testify/assert"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/server/v3/embed"
 )
 
 var (
@@ -47,7 +40,7 @@ var (
 
 func init() {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2379"},
+		Endpoints:   []string{"127.0.0.1:20000"},
 		DialTimeout: 2 * time.Second,
 	})
 	if err != nil {
@@ -67,7 +60,7 @@ func TestRegistry(t *testing.T) {
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo1",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8000"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20002"),
 					Weight:      10,
 					Tags:        nil,
 				},
@@ -79,13 +72,13 @@ func TestRegistry(t *testing.T) {
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo2",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8000"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20002"),
 					Weight:      15,
 					Tags:        nil,
 				},
 				{
 					ServiceName: "hertz.test.demo2",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8001"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20004"),
 					Weight:      20,
 					Tags:        nil,
 				},
@@ -94,7 +87,7 @@ func TestRegistry(t *testing.T) {
 		},
 	}
 	for _, tes := range tests {
-		r, err := NewEtcdRegistry([]string{"127.0.0.1:2379"})
+		r, err := NewEtcdRegistry([]string{"127.0.0.1:20000"})
 		assert.False(t, err != nil)
 		for _, info := range tes.info {
 			if err := r.Register(info); err != nil {
@@ -144,7 +137,7 @@ func TestResolver(t *testing.T) {
 				ServiceName: "demo1.hertz.local",
 				args: []args{
 					{
-						Addr:   "127.0.0.1:8000",
+						Addr:   "127.0.0.1:20002",
 						Weight: 10,
 						Tags:   map[string]string{"test": "test1"},
 					},
@@ -163,7 +156,7 @@ func TestResolver(t *testing.T) {
 						Tags:   map[string]string{"test": "test1"},
 					},
 					{
-						Addr:   "127.0.0.1:8001",
+						Addr:   "127.0.0.1:20004",
 						Weight: 3,
 						Tags:   map[string]string{"test": "test2"},
 					},
@@ -202,7 +195,7 @@ func TestResolver(t *testing.T) {
 			}
 			cancel()
 		}
-		r, err := NewEtcdResolver([]string{"127.0.0.1:2379"})
+		r, err := NewEtcdResolver([]string{"127.0.0.1:20000"})
 		if err != nil {
 			t.Error(err)
 		}
@@ -229,7 +222,7 @@ func TestResolver(t *testing.T) {
 // TestEtcdRegistryWithHertz Test etcd registry complete workflow(service registry|service de-registry|service resolver)with hertz.
 func TestEtcdRegistryWithHertz(t *testing.T) {
 	address := "127.0.0.1:1234"
-	r, _ := NewEtcdRegistry([]string{"127.0.0.1:2379"})
+	r, _ := NewEtcdRegistry([]string{"127.0.0.1:20000"})
 	srvName := "hertz.with.registry"
 	h := server.Default(
 		server.WithHostPorts(address),
@@ -248,7 +241,7 @@ func TestEtcdRegistryWithHertz(t *testing.T) {
 
 	// register
 	newClient, _ := client.NewClient()
-	resolver, _ := NewEtcdResolver([]string{"127.0.0.1:2379"})
+	resolver, _ := NewEtcdResolver([]string{"127.0.0.1:20000"})
 	newClient.Use(sd.Discovery(resolver))
 
 	addr := fmt.Sprintf("http://" + srvName + "/ping")
@@ -273,171 +266,4 @@ func TestEtcdRegistryWithHertz(t *testing.T) {
 	assert.True(t, err1 != nil)
 	assert.Equal(t, 0, status1)
 	assert.Equal(t, "", string(body1))
-}
-
-func TestEtcdRegistryWithAddressBlank(t *testing.T) {
-	s, endpoint := setupEmbedEtcd(t)
-	rg, err := NewEtcdRegistry([]string{endpoint})
-	require.Nil(t, err)
-	rs, err := NewEtcdResolver([]string{endpoint})
-	require.Nil(t, err)
-
-	infoList := []registry.Info{
-		{
-			ServiceName: "registry-etcd-test",
-			Addr:        utils.NewNetAddr("tcp", "[::]:8888"),
-			Weight:      27,
-			Tags:        map[string]string{"hello": "world"},
-		},
-		{
-			ServiceName: "registry-etcd-test-suffix",
-			Addr:        utils.NewNetAddr("tcp", "127.0.0.1:9999"),
-			Weight:      27,
-			Tags:        map[string]string{"hello": "world"},
-		},
-	}
-
-	// test register service
-	{
-		for _, info := range infoList {
-			err = rg.Register(&info)
-			require.Nil(t, err)
-
-			desc := rs.Target(context.TODO(), &discovery.TargetInfo{
-				Host: info.ServiceName,
-				Tags: info.Tags,
-			})
-			result, err := rs.Resolve(context.TODO(), desc)
-			require.Nil(t, err)
-			address, err := rg.(*etcdRegistry).getAddressOfRegistration(&info)
-			require.Nil(t, err)
-			expected := discovery.Result{
-				CacheKey: info.ServiceName,
-				Instances: []discovery.Instance{
-					discovery.NewInstance(info.Addr.Network(), address, info.Weight, info.Tags),
-				},
-			}
-			require.Equal(t, expected, result)
-		}
-	}
-
-	// test deregister service
-	{
-		for _, info := range infoList {
-			err = rg.Deregister(&info)
-			assert.Nil(t, err)
-		}
-	}
-	teardownEmbedEtcd(s)
-}
-
-func TestEtcdRegistryWithEnvironmentVariable(t *testing.T) {
-	s, endpoint := setupEmbedEtcd(t)
-	err := os.Setenv(hertzPortToRegistry, "8899")
-	if err != nil {
-		return
-	}
-	err = os.Setenv(hertzIpToRegistry, "127.0.0.2")
-	if err != nil {
-		return
-	}
-
-	rg, err := NewEtcdRegistry([]string{endpoint})
-	require.Nil(t, err)
-	rs, err := NewEtcdResolver([]string{endpoint})
-	require.Nil(t, err)
-
-	infoList := []registry.Info{
-		{
-			ServiceName: "registry-etcd-test",
-			Addr:        utils.NewNetAddr("tcp", "[::]:8888"),
-			Weight:      27,
-			Tags:        map[string]string{"hello": "world"},
-		},
-		{
-			ServiceName: "registry-etcd-test-suffix",
-			Addr:        utils.NewNetAddr("tcp", "10.122.1.108:9999"),
-			Weight:      27,
-			Tags:        map[string]string{"hello": "world"},
-		},
-	}
-
-	// test register service
-	{
-		for _, info := range infoList {
-			err = rg.Register(&info)
-			require.Nil(t, err)
-
-			desc := rs.Target(context.TODO(), &discovery.TargetInfo{
-				Host: info.ServiceName,
-			})
-			result, err := rs.Resolve(context.TODO(), desc)
-			require.Nil(t, err)
-			address, err := rg.(*etcdRegistry).getAddressOfRegistration(&info)
-			require.Nil(t, err)
-			expected := discovery.Result{
-				CacheKey: info.ServiceName,
-				Instances: []discovery.Instance{
-					discovery.NewInstance(info.Addr.Network(), address, info.Weight, info.Tags),
-				},
-			}
-			require.Equal(t, expected, result)
-		}
-	}
-
-	// test deregister service
-	{
-		for _, info := range infoList {
-			err = rg.Deregister(&info)
-			require.Nil(t, err)
-		}
-	}
-	os.Unsetenv(hertzPortToRegistry)
-	os.Unsetenv(hertzIpToRegistry)
-	teardownEmbedEtcd(s)
-}
-
-func TestRetryOption(t *testing.T) {
-	o := newOptionForServer([]string{"127.0.0.1:2345"})
-	assert.Equal(t, o.etcdCfg.Endpoints, []string{"127.0.0.1:2345"})
-	assert.Equal(t, uint(5), o.retryCfg.maxAttemptTimes)
-	assert.Equal(t, 30*time.Second, o.retryCfg.observeDelay)
-	assert.Equal(t, 10*time.Second, o.retryCfg.retryDelay)
-}
-
-func TestRetryCustomConfig(t *testing.T) {
-	o := newOptionForServer(
-		[]string{"127.0.0.1:2345"},
-		WithMaxAttemptTimes(10),
-		WithObserveDelay(20*time.Second),
-		WithRetryDelay(5*time.Second),
-	)
-	assert.Equal(t, uint(10), o.retryCfg.maxAttemptTimes)
-	assert.Equal(t, 20*time.Second, o.retryCfg.observeDelay)
-	assert.Equal(t, 5*time.Second, o.retryCfg.retryDelay)
-}
-
-func setupEmbedEtcd(t *testing.T) (*embed.Etcd, string) {
-	endpoint := fmt.Sprintf("unix://localhost:%06d", os.Getpid())
-	u, err := url.Parse(endpoint)
-	require.Nil(t, err)
-	dir, err := ioutil.TempDir("", "etcd_resolver_test")
-	require.Nil(t, err)
-
-	cfg := embed.NewConfig()
-	cfg.LCUrls = []url.URL{*u}
-	// disable etcd log
-	cfg.LogLevel = "panic"
-	cfg.Dir = dir
-
-	s, err := embed.StartEtcd(cfg)
-	require.Nil(t, err)
-
-	<-s.Server.ReadyNotify()
-	return s, endpoint
-}
-
-func teardownEmbedEtcd(s *embed.Etcd) {
-	s.Close()
-	_ = os.RemoveAll(s.Config().Dir)
 }

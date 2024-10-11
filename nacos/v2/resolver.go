@@ -16,111 +16,58 @@ package nacos
 
 import (
 	"context"
-	"net"
-	"net/url"
-	"strconv"
-	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+
+	cwNacos "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz/v2"
+	cwOption "github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options"
 )
 
 var _ discovery.Resolver
 
 type nacosResolver struct {
-	client naming_client.INamingClient
-	opts   resolverOptions
+	resolver discovery.Resolver
 }
 
-func (n *nacosResolver) Target(_ context.Context, target *discovery.TargetInfo) string {
-	var metadata strings.Builder
-
-	// Set serviceName and metadata to desc
-	tags := target.Tags
-	if len(tags) == 0 {
-		return target.Host
-	}
-
-	metadata.WriteString(target.Host)
-	metadata.WriteString("?")
-	values := url.Values{}
-	for k, v := range tags {
-		values.Add(k, v)
-	}
-	metadata.WriteString(values.Encode())
-	return metadata.String()
+func (n *nacosResolver) Target(ctx context.Context, target *discovery.TargetInfo) string {
+	return n.resolver.Target(ctx, target)
 }
 
-func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
-	var metadata map[string]string
-	serviceName := desc
-
-	// Get serviceName and metadata from desc
-	if strings.Contains(desc, "?") {
-		queries, _ := url.Parse(desc)
-		tags, _ := url.ParseQuery(queries.Query().Encode())
-
-		result := make(map[string]string)
-		for key, value := range tags {
-			result[key] = value[0]
-		}
-		metadata = result
-		serviceName = strings.Split(desc, "?")[0]
-	}
-
-	res, err := n.client.SelectInstances(vo.SelectInstancesParam{
-		ServiceName: serviceName,
-		HealthyOnly: true,
-		GroupName:   n.opts.group,
-		Clusters:    []string{n.opts.cluster},
-	})
-	if err != nil {
-		return discovery.Result{}, err
-	}
-	instances := make([]discovery.Instance, 0, len(res))
-	for _, ins := range res {
-		if !ins.Enable || (len(metadata) > 0 && !compareMaps(ins.Metadata, metadata)) {
-			continue
-		}
-
-		formatPort := strconv.FormatUint(ins.Port, 10)
-		instances = append(instances,
-			discovery.NewInstance(
-				"tcp",
-				net.JoinHostPort(ins.Ip, formatPort),
-				int(ins.Weight), ins.Metadata,
-			),
-		)
-	}
-
-	return discovery.Result{
-		CacheKey:  desc,
-		Instances: instances,
-	}, nil
+func (n *nacosResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
+	return n.resolver.Resolve(ctx, desc)
 }
 
 func (n *nacosResolver) Name() string {
-	return "nacos" + ":" + n.opts.cluster + ":" + n.opts.group
+	return n.resolver.Name()
 }
 
 // NewDefaultNacosResolver create a default service resolver using nacos.
 func NewDefaultNacosResolver(opts ...ResolverOption) (discovery.Resolver, error) {
-	client, err := newDefaultNacosConfig()
+	cfgs := transferResolverOption(opts...)
+
+	nacosResolver, err := cwNacos.NewDefaultNacosResolver(cfgs...)
 	if err != nil {
 		return nil, err
 	}
-	return NewNacosResolver(client, opts...), nil
+
+	return nacosResolver, nil
 }
 
 // NewNacosResolver create a service resolver using nacos.
 func NewNacosResolver(cli naming_client.INamingClient, opts ...ResolverOption) discovery.Resolver {
-	opt := resolverOptions{
-		cluster: "DEFAULT",
-		group:   "DEFAULT_GROUP",
+	cfgs := transferResolverOption(opts...)
+	return &nacosResolver{
+		resolver: cwNacos.NewNacosResolver(cli, cfgs...),
 	}
-	for _, option := range opts {
-		option(&opt)
+}
+
+func transferResolverOption(opts ...ResolverOption) []cwOption.ResolverOption {
+	o := resolverOptions{}
+
+	for _, opt := range opts {
+		opt(&o)
 	}
-	return &nacosResolver{client: cli, opts: opt}
+
+	return o.cfgs
 }

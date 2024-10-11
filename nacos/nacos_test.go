@@ -113,30 +113,30 @@ func TestRegistryAndDeregister(t *testing.T) {
 	err = register.Deregister(&infos[0])
 	assert.Nil(t, err)
 
-	// registry info error
+	// registry-hertz info cwerror
 	err = register.Register(&infos[1])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "valid parse registry info error")
+	assert.Contains(t, err.Error(), "valid parse registry-hertz info cwerror")
 
-	// registry info addr error
+	// registry-hertz info addr cwerror
 	err = register.Register(&infos[2])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "parse registry info addr error")
+	assert.Contains(t, err.Error(), "parse registry-hertz info addr cwerror")
 
-	// port error
+	// port cwerror
 	err = register.Register(&infos[3])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "parse registry info port error")
+	assert.Contains(t, err.Error(), "parse registry-hertz info port cwerror")
 
 	// addr nil
 	err = register.Register(&infos[4])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "valid parse registry info error")
+	assert.Contains(t, err.Error(), "valid parse registry-hertz info cwerror")
 
-	// instance error
+	// instance cwerror
 	err = register.Register(&infos[5])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "register instance error")
+	assert.Contains(t, err.Error(), "register instance cwerror")
 }
 
 // TestNewDefaultResolver test new a default nacos resolver.
@@ -191,7 +191,7 @@ func TestMultiInstancesWithDefRegistry(t *testing.T) {
 		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8083"),
 	})
 	assert.Nil(t, err)
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 10)
 	res, err = newclient.SelectAllInstances(vo.SelectAllInstancesParam{
 		ServiceName: svcName,
 		GroupName:   groupName,
@@ -256,7 +256,7 @@ func TestMultipleInstances(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 10)
 	res, err = namingClient.SelectAllInstances(vo.SelectAllInstancesParam{
 		ServiceName: svcName,
 		GroupName:   groupName,

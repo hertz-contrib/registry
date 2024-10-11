@@ -20,15 +20,13 @@ import (
 	"net"
 	"time"
 
-	"github.com/redis/go-redis/v9"
+	cwRedis "github.com/cloudwego-contrib/cwgo-pkg/registry/redis/redishertz"
 )
 
 type Option func(opts *Options)
 
 type Options struct {
-	*redis.Options
-	expireTime      int
-	refreshInterval int
+	cfgs []cwRedis.Option
 }
 
 // WithExpireTime redis key expiration time in seconds
@@ -36,7 +34,7 @@ type Options struct {
 // Default: 60s
 func WithExpireTime(time int) Option {
 	return func(opts *Options) {
-		opts.expireTime = time
+		opts.cfgs = append(opts.cfgs, cwRedis.WithExpireTime(time))
 	}
 }
 
@@ -45,42 +43,42 @@ func WithExpireTime(time int) Option {
 // Default: 30s
 func WithRefreshInterval(interval int) Option {
 	return func(opts *Options) {
-		opts.refreshInterval = interval
+		opts.cfgs = append(opts.cfgs, cwRedis.WithRefreshInterval(interval))
 	}
 }
 
 func WithPassword(password string) Option {
 	return func(opts *Options) {
-		opts.Password = password
+		opts.cfgs = append(opts.cfgs, cwRedis.WithPassword(password))
 	}
 }
 
 func WithDB(db int) Option {
 	return func(opts *Options) {
-		opts.DB = db
+		opts.cfgs = append(opts.cfgs, cwRedis.WithDB(db))
 	}
 }
 
 func WithTLSConfig(t *tls.Config) Option {
 	return func(opts *Options) {
-		opts.TLSConfig = t
+		opts.cfgs = append(opts.cfgs, cwRedis.WithTLSConfig(t))
 	}
 }
 
 func WithDialer(dialer func(ctx context.Context, network, addr string) (net.Conn, error)) Option {
 	return func(opts *Options) {
-		opts.Dialer = dialer
+		opts.cfgs = append(opts.cfgs, cwRedis.WithDialer(dialer))
 	}
 }
 
 func WithReadTimeout(t time.Duration) Option {
 	return func(opts *Options) {
-		opts.ReadTimeout = t
+		opts.cfgs = append(opts.cfgs, cwRedis.WithReadTimeout(t))
 	}
 }
 
 func WithWriteTimeout(t time.Duration) Option {
 	return func(opts *Options) {
-		opts.WriteTimeout = t
+		opts.cfgs = append(opts.cfgs, cwRedis.WithWriteTimeout(t))
 	}
 }

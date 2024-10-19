@@ -427,6 +427,7 @@ func TestCompareMaps(t *testing.T) {
 
 // TestHertzAppWithNacosRegistry test a client call a hertz app with NacosRegistry
 func TestHertzAppWithNacosRegistry(t *testing.T) {
+	namingClient = getNamingClient()
 	register := NewNacosRegistry(namingClient)
 	address := "127.0.0.1:4576"
 	srvName := "d.h.t"

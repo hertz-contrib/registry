@@ -40,7 +40,7 @@ var (
 
 func init() {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:20000"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 		DialTimeout: 2 * time.Second,
 	})
 	if err != nil {
@@ -60,7 +60,7 @@ func TestRegistry(t *testing.T) {
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo1",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20002"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8000"),
 					Weight:      10,
 					Tags:        nil,
 				},
@@ -72,13 +72,13 @@ func TestRegistry(t *testing.T) {
 			info: []*registry.Info{
 				{
 					ServiceName: "hertz.test.demo2",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20002"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8000"),
 					Weight:      15,
 					Tags:        nil,
 				},
 				{
 					ServiceName: "hertz.test.demo2",
-					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:20004"),
+					Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8001"),
 					Weight:      20,
 					Tags:        nil,
 				},
@@ -87,7 +87,7 @@ func TestRegistry(t *testing.T) {
 		},
 	}
 	for _, tes := range tests {
-		r, err := NewEtcdRegistry([]string{"127.0.0.1:20000"})
+		r, err := NewEtcdRegistry([]string{"127.0.0.1:2379"})
 		assert.False(t, err != nil)
 		for _, info := range tes.info {
 			if err := r.Register(info); err != nil {
@@ -137,7 +137,7 @@ func TestResolver(t *testing.T) {
 				ServiceName: "demo1.hertz.local",
 				args: []args{
 					{
-						Addr:   "127.0.0.1:20002",
+						Addr:   "127.0.0.1:8000",
 						Weight: 10,
 						Tags:   map[string]string{"test": "test1"},
 					},
@@ -156,7 +156,7 @@ func TestResolver(t *testing.T) {
 						Tags:   map[string]string{"test": "test1"},
 					},
 					{
-						Addr:   "127.0.0.1:20004",
+						Addr:   "127.0.0.1:8001",
 						Weight: 3,
 						Tags:   map[string]string{"test": "test2"},
 					},
@@ -195,7 +195,7 @@ func TestResolver(t *testing.T) {
 			}
 			cancel()
 		}
-		r, err := NewEtcdResolver([]string{"127.0.0.1:20000"})
+		r, err := NewEtcdResolver([]string{"127.0.0.1:2379"})
 		if err != nil {
 			t.Error(err)
 		}
@@ -222,7 +222,7 @@ func TestResolver(t *testing.T) {
 // TestEtcdRegistryWithHertz Test etcd registry complete workflow(service registry|service de-registry|service resolver)with hertz.
 func TestEtcdRegistryWithHertz(t *testing.T) {
 	address := "127.0.0.1:1234"
-	r, _ := NewEtcdRegistry([]string{"127.0.0.1:20000"})
+	r, _ := NewEtcdRegistry([]string{"127.0.0.1:2379"})
 	srvName := "hertz.with.registry"
 	h := server.Default(
 		server.WithHostPorts(address),
@@ -241,7 +241,7 @@ func TestEtcdRegistryWithHertz(t *testing.T) {
 
 	// register
 	newClient, _ := client.NewClient()
-	resolver, _ := NewEtcdResolver([]string{"127.0.0.1:20000"})
+	resolver, _ := NewEtcdResolver([]string{"127.0.0.1:2379"})
 	newClient.Use(sd.Discovery(resolver))
 
 	addr := fmt.Sprintf("http://" + srvName + "/ping")

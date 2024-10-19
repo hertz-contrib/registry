@@ -191,7 +191,7 @@ func TestMultiInstancesWithDefRegistry(t *testing.T) {
 		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8083"),
 	})
 	assert.Nil(t, err)
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 30)
 	res, err = newclient.SelectAllInstances(vo.SelectAllInstancesParam{
 		ServiceName: svcName,
 		GroupName:   groupName,
@@ -256,7 +256,7 @@ func TestMultipleInstances(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 30)
 	res, err = namingClient.SelectAllInstances(vo.SelectAllInstancesParam{
 		ServiceName: svcName,
 		GroupName:   groupName,

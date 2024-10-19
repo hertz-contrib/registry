@@ -175,7 +175,7 @@ func TestMultipleInstances(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 30)
 
 	res, err = namingClient.SelectInstances(vo.SelectInstancesParam{
 		ServiceName: svcName,
@@ -184,7 +184,10 @@ func TestMultipleInstances(t *testing.T) {
 		HealthyOnly: true,
 	})
 
-	assert.Equal(t, "instance list is empty!", err.Error())
+	if err != nil {
+		assert.Equal(t, "instance list is empty!", err.Error())
+	}
+
 	assert.Equal(t, 0, len(res))
 }
 

@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-
 	"sync"
 
 	"github.com/cloudwego/hertz/pkg/app"

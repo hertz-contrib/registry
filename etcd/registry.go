@@ -29,5 +29,4 @@ const (
 // NewEtcdRegistry creates a etcd based registry.
 func NewEtcdRegistry(endpoints []string, opts ...Option) (registry.Registry, error) {
 	return etcdhertz.NewEtcdRegistry(endpoints, opts...)
-
 }

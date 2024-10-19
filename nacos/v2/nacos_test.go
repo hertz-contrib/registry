@@ -183,7 +183,6 @@ func TestMultipleInstances(t *testing.T) {
 		Clusters:    []string{clusterName},
 		HealthyOnly: true,
 	})
-
 	if err != nil {
 		assert.Equal(t, "instance list is empty!", err.Error())
 	}

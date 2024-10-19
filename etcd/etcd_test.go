@@ -244,7 +244,7 @@ func TestEtcdRegistryWithHertz(t *testing.T) {
 	resolver, _ := NewEtcdResolver([]string{"127.0.0.1:2379"})
 	newClient.Use(sd.Discovery(resolver))
 
-	addr := fmt.Sprintf("http://" + srvName + "/ping")
+	addr := fmt.Sprintf("http://%s/ping", srvName)
 	status, body, err := newClient.Get(context.Background(), nil, addr, config.WithSD(true))
 	assert.Nil(t, err)
 	assert.Equal(t, 200, status)

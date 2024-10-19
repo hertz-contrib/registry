@@ -15,32 +15,10 @@
 package etcd
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
-	"io/ioutil"
 	"time"
 
 	"github.com/cloudwego-contrib/cwgo-pkg/registry/etcd/etcdhertz"
 )
-
-const (
-	defaultTTL = 60
-)
-
-type option struct {
-	// etcd client config
-	options []etcdhertz.Option
-}
-
-/*type retryCfg struct {
-	// The maximum number of call attempt times, including the initial call
-	maxAttemptTimes uint
-	// observeDelay is the delay time for checking the service status under normal conditions
-	observeDelay time.Duration
-	// retryDelay is the delay time for attempting to register the service after disconnecting
-	retryDelay time.Duration
-}*/
 
 type Option = etcdhertz.Option
 
@@ -84,25 +62,4 @@ func WithTLSOpt(certFile, keyFile, caFile string) Option {
 // WithAuthOpt returns an option that authentication by username and password.
 func WithAuthOpt(username, password string) Option {
 	return etcdhertz.WithAuthOpt(username, password)
-}
-
-func newTLSConfig(certFile, keyFile, caFile, serverName string) (*tls.Config, error) {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
-	}
-	caCert, err := ioutil.ReadFile(caFile)
-	if err != nil {
-		return nil, err
-	}
-	caCertPool := x509.NewCertPool()
-	successful := caCertPool.AppendCertsFromPEM(caCert)
-	if !successful {
-		return nil, errors.New("failed to parse ca certificate as PEM encoded content")
-	}
-	cfg := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-	}
-	return cfg, nil
 }

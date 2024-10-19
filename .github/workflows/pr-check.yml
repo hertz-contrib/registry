@@ -39,5 +39,5 @@ jobs:
         with:
           version: latest
           working-directory: ${{ matrix.workdir }}
-          args: -E gofumpt --timeout 10m
+          args: -E gofumpt --out-format=colored-line-number --timeout 10m
           skip-pkg-cache: true

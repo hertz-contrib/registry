@@ -22,10 +22,6 @@ import (
 	"github.com/go-chassis/sc-client"
 )
 
-type resolverOptions struct {
-	options []options.ResolverOption
-}
-
 // ResolverOption is service-comb resolver option.
 type ResolverOption = options.ResolverOption
 
@@ -50,5 +46,4 @@ func NewDefaultSCResolver(endPoints []string, opts ...ResolverOption) (discovery
 
 func NewSCResolver(cli *sc.Client, opts ...ResolverOption) discovery.Resolver {
 	return servicecombhertz.NewSCResolver(cli, opts...)
-
 }

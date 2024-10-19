@@ -15,8 +15,9 @@
 package zookeeper
 
 import (
-	"github.com/cloudwego-contrib/cwgo-pkg/registry/zookeeper/zookeeperhertz"
 	"time"
+
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/zookeeper/zookeeperhertz"
 
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 )

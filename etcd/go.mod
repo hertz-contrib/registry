@@ -94,4 +94,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/etcd => ../../cwgo-pkg-registry/registry/etcd
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/etcd => github.com/smx-Morgan/cwgo-pkg/registry/etcd v0.0.0-20241016000926-d56ef7e0f578

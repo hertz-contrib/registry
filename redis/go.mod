@@ -41,4 +41,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/redis => ../../cwgo-pkg-registry/registry/redis
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/redis => github.com/smx-Morgan/cwgo-pkg/registry/redis v0.0.0-20241016000926-d56ef7e0f578

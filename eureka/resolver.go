@@ -16,6 +16,7 @@ package eureka
 
 import (
 	"context"
+
 	"github.com/cloudwego-contrib/cwgo-pkg/registry/eureka/eurekahertz"
 
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"

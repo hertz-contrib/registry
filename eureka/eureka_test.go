@@ -14,13 +14,12 @@
 
 package eureka
 
-import "time"
-
 import (
 	"context"
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/client"
@@ -31,7 +30,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-
 	"github.com/stretchr/testify/assert"
 )
 

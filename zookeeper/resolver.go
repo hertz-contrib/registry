@@ -15,9 +15,10 @@
 package zookeeper
 
 import (
+	"time"
+
 	"github.com/cloudwego-contrib/cwgo-pkg/registry/zookeeper/zookeeperhertz"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"time"
 )
 
 // NewZookeeperResolver create a zookeeper based resolver

@@ -18,9 +18,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"github.com/cloudwego-contrib/cwgo-pkg/registry/etcd/etcdhertz"
 	"io/ioutil"
 	"time"
+
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/etcd/etcdhertz"
 )
 
 const (

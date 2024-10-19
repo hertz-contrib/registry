@@ -48,4 +48,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/servicecomb => ../../cwgo-pkg-registry/registry/servicecomb
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/servicecomb => github.com/smx-Morgan/cwgo-pkg/registry/servicecomb v0.0.0-20241016000926-d56ef7e0f578

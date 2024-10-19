@@ -51,4 +51,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cloudwego-contrib/cwgo-pkg/registry/consul => ../../cwgo-pkg-registry/registry/consul
+replace github.com/cloudwego-contrib/cwgo-pkg/registry/consul => github.com/smx-Morgan/cwgo-pkg/registry/consul v0.0.0-20241016000926-d56ef7e0f578

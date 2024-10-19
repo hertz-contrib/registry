@@ -2,7 +2,6 @@ module github.com/hertz-contrib/registry/servicecomb
 
 go 1.21
 
-
 require (
 	github.com/cloudwego-contrib/cwgo-pkg/registry/servicecomb v0.0.0-00010101000000-000000000000
 	github.com/cloudwego/hertz v0.9.2

@@ -68,4 +68,4 @@ replace github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/nacoshertz/v2 => gi
 
 replace github.com/cloudwego-contrib/cwgo-pkg/registry/nacos/options => github.com/smx-Morgan/cwgo-pkg/registry/nacos/options v0.0.0-20241016000926-d56ef7e0f578
 
-replace github.com/nacos-group/nacos-sdk-go/v2 => github.com/nacos-group/nacos-sdk-go/v2 v2.2.0
+replace github.com/nacos-group/nacos-sdk-go/v2 v2.2.7 => github.com/nacos-group/nacos-sdk-go/v2 v2.2.0

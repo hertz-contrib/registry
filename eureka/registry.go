@@ -15,18 +15,11 @@
 package eureka
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"net"
-	"strconv"
-	"sync"
 	"time"
 
-	"github.com/bytedance/sonic"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/eureka/eurekahertz"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hudl/fargo"
 )
 
@@ -50,181 +43,37 @@ type RegistryEntity struct {
 	Tags   map[string]string
 }
 
-type eurekaHeartbeat struct {
-	cancel      context.CancelFunc
-	instanceKey string
-}
-
 type eurekaRegistry struct {
-	eurekaConn       *fargo.EurekaConnection
-	lock             *sync.RWMutex
-	registryIns      map[string]*eurekaHeartbeat
-	heatBeatInterval time.Duration
+	registry registry.Registry
 }
 
 // NewEurekaRegistry creates a eureka registry.
 func NewEurekaRegistry(servers []string, heatBeatInterval time.Duration) *eurekaRegistry {
-	conn := fargo.NewConn(servers...)
-
 	return &eurekaRegistry{
-		eurekaConn:       &conn,
-		registryIns:      make(map[string]*eurekaHeartbeat),
-		lock:             &sync.RWMutex{},
-		heatBeatInterval: heatBeatInterval,
+		registry: eurekahertz.NewEurekaRegistry(servers, heatBeatInterval),
 	}
 }
 
 // NewEurekaRegistryFromConfig creates a eureka registry.
 func NewEurekaRegistryFromConfig(config fargo.Config, heatBeatInterval time.Duration) *eurekaRegistry {
-	conn := fargo.NewConnFromConfig(config)
-
 	return &eurekaRegistry{
-		eurekaConn:       &conn,
-		registryIns:      make(map[string]*eurekaHeartbeat),
-		lock:             &sync.RWMutex{},
-		heatBeatInterval: heatBeatInterval,
+		registry: eurekahertz.NewEurekaRegistryFromConfig(config, heatBeatInterval),
 	}
 }
 
 // NewEurekaRegistryFromConn creates a eureka registry.
 func NewEurekaRegistryFromConn(conn fargo.EurekaConnection, heatBeatInterval time.Duration) *eurekaRegistry {
 	return &eurekaRegistry{
-		eurekaConn:       &conn,
-		registryIns:      make(map[string]*eurekaHeartbeat),
-		lock:             &sync.RWMutex{},
-		heatBeatInterval: heatBeatInterval,
+		registry: eurekahertz.NewEurekaRegistryFromConn(conn, heatBeatInterval),
 	}
 }
 
 // Deregister deregister a server with given registry info.
 func (e *eurekaRegistry) Deregister(info *registry.Info) error {
-	instance, err := e.eurekaInstance(info)
-	if err != nil {
-		return err
-	}
-
-	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
-
-	e.lock.RLock()
-	insHeartbeat, ok := e.registryIns[instanceKey]
-	e.lock.RUnlock()
-	if !ok {
-		return fmt.Errorf("instance{%s} has not registered", instanceKey)
-	}
-
-	if err = e.eurekaConn.DeregisterInstance(instance); err != nil {
-		return err
-	}
-
-	e.lock.Lock()
-	insHeartbeat.cancel()
-	delete(e.registryIns, instanceKey)
-	e.lock.Unlock()
-
-	return nil
+	return e.registry.Deregister(info)
 }
 
 // Register a server with given registry info.
 func (e *eurekaRegistry) Register(info *registry.Info) error {
-	instance, err := e.eurekaInstance(info)
-	if err != nil {
-		return err
-	}
-
-	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
-
-	e.lock.RLock()
-	_, ok := e.registryIns[instanceKey]
-	e.lock.RUnlock()
-	if ok {
-		return fmt.Errorf("instance{%s} already registered", instanceKey)
-	}
-
-	if err = e.eurekaConn.RegisterInstance(instance); err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	go e.heartBeat(ctx, instance)
-
-	e.lock.Lock()
-	defer e.lock.Unlock()
-	e.registryIns[instanceKey] = &eurekaHeartbeat{
-		instanceKey: instanceKey,
-		cancel:      cancel,
-	}
-
-	return nil
-}
-
-func (e *eurekaRegistry) eurekaInstance(info *registry.Info) (*fargo.Instance, error) {
-	if info == nil {
-		return nil, ErrNilInfo
-	}
-	if info.Addr == nil {
-		return nil, ErrNilAddr
-	}
-	if len(info.ServiceName) == 0 {
-		return nil, ErrEmptyServiceName
-	}
-
-	host, portStr, err := net.SplitHostPort(info.Addr.String())
-	if err != nil {
-		return nil, err
-	}
-	if portStr == "" {
-		return nil, fmt.Errorf("registry info addr missing port")
-	}
-	if host == "" || host == "::" {
-		host = utils.LocalIP()
-		if host == utils.UNKNOWN_IP_ADDR {
-			return nil, fmt.Errorf("get local ip error")
-		}
-	}
-
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if port <= 0 {
-		return nil, ErrMissingPort
-	}
-
-	if info.Weight == 0 {
-		info.Weight = registry.DefaultWeight
-	}
-
-	meta, err := sonic.Marshal(&RegistryEntity{Weight: info.Weight, Tags: info.Tags})
-	if err != nil {
-		return nil, err
-	}
-	instanceKey := fmt.Sprintf("%s:%s", info.ServiceName, info.Addr.String())
-	instance := &fargo.Instance{
-		HostName:       instanceKey,
-		InstanceId:     instanceKey,
-		App:            info.ServiceName,
-		IPAddr:         host,
-		Port:           int(port),
-		Status:         fargo.UP,
-		DataCenterInfo: fargo.DataCenterInfo{Name: fargo.MyOwn},
-	}
-
-	instance.SetMetadataString(Meta, string(meta))
-	return instance, nil
-}
-
-func (e *eurekaRegistry) heartBeat(ctx context.Context, ins *fargo.Instance) {
-	ticker := time.NewTicker(e.heatBeatInterval)
-	for {
-		select {
-		case <-ctx.Done():
-			ticker.Stop()
-			return
-		case <-ticker.C:
-			if err := e.eurekaConn.HeartBeatInstance(ins); err != nil {
-				hlog.Errorf("HERTZ: Heartbeat error, reason: %s", err.Error())
-			}
-		}
-	}
+	return e.registry.Register(info)
 }

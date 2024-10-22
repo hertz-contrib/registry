@@ -15,9 +15,7 @@
 package redis
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -27,12 +25,6 @@ const (
 	hertz  = "hertz"
 	server = "server"
 	tcp    = "tcp"
-)
-
-const (
-	defaultExpireTime      = 60
-	defaultRefreshInterval = 30
-	defaultWeight          = 10
 )
 
 type registryHash struct {
@@ -46,19 +38,6 @@ type registryInfo struct {
 	Addr        string            `json:"addr"`
 	Weight      int               `json:"weight"`
 	Tags        map[string]string `json:"tags"`
-}
-
-func validateRegistryInfo(info *registry.Info) error {
-	if info == nil {
-		return fmt.Errorf("registry.Info can not be empty")
-	}
-	if info.ServiceName == "" {
-		return fmt.Errorf("registry.Info ServiceName can not be empty")
-	}
-	if info.Addr == nil {
-		return fmt.Errorf("registry.Info Addr can not be empty")
-	}
-	return nil
 }
 
 func generateKey(serviceName, serviceType string) string {
@@ -83,18 +62,5 @@ func convertInfo(info *registry.Info) *registryInfo {
 		Addr:        info.Addr.String(),
 		Weight:      info.Weight,
 		Tags:        info.Tags,
-	}
-}
-
-func keepAlive(ctx context.Context, hash *registryHash, r *redisRegistry) {
-	ticker := time.NewTicker(time.Duration(r.options.refreshInterval) * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			r.client.Expire(ctx, hash.key, time.Duration(r.options.expireTime)*time.Second)
-		case <-ctx.Done():
-			break
-		}
 	}
 }

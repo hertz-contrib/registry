@@ -15,98 +15,18 @@
 package zookeeper
 
 import (
-	"context"
-	"fmt"
-	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
+	"github.com/cloudwego-contrib/cwgo-pkg/registry/zookeeper/zookeeperhertz"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/go-zookeeper/zk"
 )
-
-type zookeeperResolver struct {
-	conn *zk.Conn
-}
 
 // NewZookeeperResolver create a zookeeper based resolver
 func NewZookeeperResolver(servers []string, sessionTimeout time.Duration) (discovery.Resolver, error) {
-	conn, _, err := zk.Connect(servers, sessionTimeout)
-	if err != nil {
-		return nil, err
-	}
-	return &zookeeperResolver{conn: conn}, nil
+	return zookeeperhertz.NewZookeeperResolver(servers, sessionTimeout)
 }
 
 // NewZookeeperResolver create a zookeeper based resolver with auth
 func NewZookeeperResolverWithAuth(servers []string, sessionTimeout time.Duration, user, password string) (discovery.Resolver, error) {
-	conn, _, err := zk.Connect(servers, sessionTimeout)
-	if err != nil {
-		return nil, err
-	}
-	auth := []byte(fmt.Sprintf("%s:%s", user, password))
-	err = conn.AddAuth(Scheme, auth)
-	if err != nil {
-		return nil, err
-	}
-	return &zookeeperResolver{conn: conn}, nil
-}
-
-func (z *zookeeperResolver) Target(_ context.Context, target *discovery.TargetInfo) string {
-	return target.Host
-}
-
-func (z *zookeeperResolver) Resolve(_ context.Context, desc string) (discovery.Result, error) {
-	path := desc
-	if !strings.HasPrefix(path, Separator) {
-		path = Separator + path
-	}
-	eps, err := z.getEndPoints(path)
-	if err != nil {
-		return discovery.Result{}, err
-	}
-
-	instances, err := z.getInstances(eps, path)
-	if err != nil {
-		return discovery.Result{}, err
-	}
-	res := discovery.Result{
-		CacheKey:  desc,
-		Instances: instances,
-	}
-	return res, nil
-}
-
-func (z *zookeeperResolver) getEndPoints(path string) ([]string, error) {
-	child, _, err := z.conn.Children(path)
-	return child, err
-}
-
-func (z *zookeeperResolver) getInstances(eps []string, path string) ([]discovery.Instance, error) {
-	instances := make([]discovery.Instance, 0, len(eps))
-	for _, ep := range eps {
-		ins, err := z.detailEndPoints(path, ep)
-		if err != nil {
-			return []discovery.Instance{}, fmt.Errorf("detail endpoint [%s] info error, cause %w", ep, err)
-		}
-		instances = append(instances, ins)
-	}
-	return instances, nil
-}
-
-func (z *zookeeperResolver) detailEndPoints(path, ep string) (discovery.Instance, error) {
-	data, _, err := z.conn.Get(path + Separator + ep)
-	if err != nil {
-		return nil, err
-	}
-	en := new(RegistryEntity)
-	err = sonic.Unmarshal(data, en)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal data [%s] error, cause %w", data, err)
-	}
-	return discovery.NewInstance("tcp", ep, en.Weight, en.Tags), nil
-}
-
-func (z *zookeeperResolver) Name() string {
-	return "zookeeper"
+	return zookeeperhertz.NewZookeeperResolverWithAuth(servers, sessionTimeout, user, password)
 }

@@ -15,63 +15,12 @@
 package redis
 
 import (
-	"context"
-
-	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/redis/go-redis/v9"
+
+	cwRedis "github.com/cloudwego-contrib/cwgo-pkg/registry/redis/redishertz"
 )
-
-var _ discovery.Resolver = (*redisResolver)(nil)
-
-type redisResolver struct {
-	client *redis.Client
-}
 
 // NewRedisResolver creates a redis resolver
 func NewRedisResolver(addr string, opts ...Option) discovery.Resolver {
-	options := &Options{
-		Options: &redis.Options{
-			Addr: addr,
-		},
-	}
-	for _, opt := range opts {
-		opt(options)
-	}
-	rdb := redis.NewClient(options.Options)
-	return &redisResolver{
-		client: rdb,
-	}
-}
-
-func (r *redisResolver) Target(_ context.Context, target *discovery.TargetInfo) string {
-	return target.Host
-}
-
-func (r *redisResolver) Resolve(ctx context.Context, desc string) (discovery.Result, error) {
-	rdb := r.client
-	fvs := rdb.HGetAll(ctx, generateKey(desc, server)).Val()
-	var its []discovery.Instance
-	for f, v := range fvs {
-		var ri registryInfo
-		err := sonic.Unmarshal([]byte(v), &ri)
-		if err != nil {
-			hlog.Warnf("HERTZ: fail to unmarshal with err: %v, ignore instance Addr: %v", err, f)
-			continue
-		}
-		weight := ri.Weight
-		if weight <= 0 {
-			weight = defaultWeight
-		}
-		its = append(its, discovery.NewInstance(tcp, ri.Addr, weight, ri.Tags))
-	}
-	return discovery.Result{
-		CacheKey:  desc,
-		Instances: its,
-	}, nil
-}
-
-func (r *redisResolver) Name() string {
-	return "redis"
+	return cwRedis.NewRedisResolver(addr, opts...)
 }

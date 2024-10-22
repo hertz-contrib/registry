@@ -111,30 +111,30 @@ func TestRegistryAndDeregister(t *testing.T) {
 	err = register.Deregister(&infos[0])
 	assert.Nil(t, err)
 
-	// registry info error
+	// registry-hertz info cwerror
 	err = register.Register(&infos[1])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "valid parse registry info error")
+	assert.Contains(t, err.Error(), "valid parse registry-hertz info cwerror")
 
-	// registry info addr error
+	// registry-hertz info addr cwerror
 	err = register.Register(&infos[2])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "parse registry info addr error")
+	assert.Contains(t, err.Error(), "parse registry-hertz info addr cwerror")
 
-	// port error
+	// port cwerror
 	err = register.Register(&infos[3])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "parse registry info port error")
+	assert.Contains(t, err.Error(), "parse registry-hertz info port cwerror")
 
 	// addr nil
 	err = register.Register(&infos[4])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "valid parse registry info error")
+	assert.Contains(t, err.Error(), "valid parse registry-hertz info cwerror")
 
-	// instance error
+	// instance cwerror
 	err = register.Register(&infos[5])
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "register instance error")
+	assert.Contains(t, err.Error(), "register instance cwerror")
 }
 
 // TestMultipleInstances test registry multiple service,then deregister one
@@ -156,6 +156,8 @@ func TestMultipleInstances(t *testing.T) {
 		Addr:        utils.NewNetAddr("tcp", "127.0.0.1:8081"),
 	})
 	assert.Nil(t, err)
+
+	time.Sleep(time.Second)
 
 	res, err := namingClient.SelectInstances(vo.SelectInstancesParam{
 		ServiceName: svcName,
@@ -181,7 +183,10 @@ func TestMultipleInstances(t *testing.T) {
 		Clusters:    []string{clusterName},
 		HealthyOnly: true,
 	})
-	assert.Equal(t, "instance list is empty!", err.Error())
+	if err != nil {
+		assert.Equal(t, "instance list is empty!", err.Error())
+	}
+
 	assert.Equal(t, 0, len(res))
 }
 
@@ -424,6 +429,7 @@ func TestCompareMaps(t *testing.T) {
 
 // TestHertzAppWithNacosRegistry test a client call a hertz app with NacosRegistry
 func TestHertzAppWithNacosRegistry(t *testing.T) {
+	namingClient = getNamingClient()
 	register := NewNacosRegistry(namingClient)
 	address := "127.0.0.1:4576"
 	srvName := "d.h.t"

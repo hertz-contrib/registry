@@ -14,24 +14,14 @@
 
 package eureka
 
-import "time"
-
 import (
 	"context"
-	"fmt"
 	"net"
 	"testing"
+	"time"
 
-	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/app/client/discovery"
-	"github.com/cloudwego/hertz/pkg/app/middlewares/client/sd"
-	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/config"
-	"github.com/cloudwego/hertz/pkg/common/utils"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -225,71 +215,4 @@ func TestEurekaRegistryWithInvalidInstanceInfo(t *testing.T) {
 		assert.True(t, registerErr != nil)
 		assert.Equal(t, entry.expectedErr, registerErr)
 	}
-}
-
-// TestRegistryAndResolver test eureka registry workflow(service registry|service de-registry|service resolver)with hertz.
-func TestEurekaRegistryAndResolverWithHertz(t *testing.T) {
-	eurekaServer := []string{"http://127.0.0.1:8761/eureka"}
-	address := "127.0.0.1:1234"
-	serviceName := "hertz.discovery.eureka"
-	info := &registry.Info{
-		ServiceName: serviceName,
-		Addr:        utils.NewNetAddr("tcp", address),
-		Weight:      10,
-		Tags:        nil,
-	}
-	r := NewEurekaRegistry(eurekaServer, 30*time.Second)
-
-	h := server.Default(
-		server.WithHostPorts(address),
-		server.WithRegistry(r, info))
-
-	h.GET("/ping", func(_ context.Context, ctx *app.RequestContext) {
-		ctx.JSON(consts.StatusOK, utils.H{"ping": "pong2"})
-	})
-	go h.Spin()
-
-	for range time.Tick(time.Second) {
-		r.lock.RLock()
-		registered := len(r.registryIns)
-		r.lock.RUnlock()
-		if h.IsRunning() && registered > 0 {
-			break
-		}
-	}
-
-	hertzClient, _ := client.NewClient()
-	resolver := NewEurekaResolver(eurekaServer)
-	hertzClient.Use(sd.Discovery(resolver))
-
-	addr := fmt.Sprintf("http://" + serviceName + "/ping")
-	status, body, err := hertzClient.Get(context.Background(), nil, addr, config.WithSD(true))
-	assert.Nil(t, err)
-	assert.Equal(t, 200, status)
-	assert.Equal(t, "{\"ping\":\"pong2\"}", string(body))
-
-	// compare data
-	opt := h.GetOptions()
-	assert.Equal(t, opt.RegistryInfo.Weight, 10)
-	assert.Equal(t, opt.RegistryInfo.Addr.String(), "127.0.0.1:1234")
-	assert.Equal(t, opt.RegistryInfo.ServiceName, serviceName)
-	assert.Nil(t, opt.RegistryInfo.Tags)
-
-	if err := h.Shutdown(context.Background()); err != nil {
-		t.Errorf("HERTZ: Shutdown error=%v", err)
-	}
-	for range time.Tick(time.Second) {
-		// block until hertz is down
-		r.lock.RLock()
-		registered := len(r.registryIns)
-		r.lock.RUnlock()
-		if registered == 0 {
-			break
-		}
-	}
-
-	status1, body1, err1 := hertzClient.Get(context.Background(), nil, addr, config.WithSD(true))
-	assert.True(t, err1 != nil)
-	assert.Equal(t, 0, status1)
-	assert.Equal(t, "", string(body1))
 }

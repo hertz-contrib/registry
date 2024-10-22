@@ -58,7 +58,7 @@ func TestZookeeperRegistryWithHertz(t *testing.T) {
 	resolver, _ := NewZookeeperResolver([]string{"127.0.0.1:2181"}, 40*time.Second)
 	newClient.Use(sd.Discovery(resolver))
 
-	addr := fmt.Sprintf("http://" + srvName + "/ping")
+	addr := fmt.Sprintf("http://%s/ping", srvName)
 	status, body, err := newClient.Get(context.Background(), nil, addr, config.WithSD(true))
 	assert.Nil(t, err)
 	assert.Equal(t, 200, status)

@@ -19,10 +19,6 @@ import (
 	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-	"github.com/nacos-group/nacos-sdk-go/v2/clients"
-	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
 const (
@@ -33,33 +29,6 @@ const (
 	nacosDefaultPort       = 8848
 	nacosDefaultRegionID   = "cn-hangzhou"
 )
-
-// newDefaultNacosConfig create a default Nacos client.
-func newDefaultNacosConfig() (naming_client.INamingClient, error) {
-	sc := []constant.ServerConfig{
-		*constant.NewServerConfig(
-			GetAddr(),
-			uint64(GetPort()),
-			constant.WithContextPath("/nacos"),
-			constant.WithScheme("http"),
-		),
-	}
-	cc := constant.ClientConfig{
-		NamespaceId:         GetNameSpaceID(),
-		RegionId:            nacosDefaultRegionID,
-		NotLoadCacheAtStart: true,
-	}
-	client, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
 
 // GetPort Get Nacos port from environment variables.
 func GetPort() int64 {

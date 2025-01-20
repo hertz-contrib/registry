@@ -4,14 +4,16 @@ on: [ pull_request ]
 
 jobs:
   compliant:
-    runs-on: [ self-hosted, X64 ]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check License Header
-        uses: apache/skywalking-eyes/header@501a28d2fb4a9b962661987e50cf0219631b32ff
+        uses: apache/skywalking-eyes/header@v0.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: typos-action
+      - name: Check Spell
         uses: crate-ci/typos@master
 
   resolve-modules:
@@ -26,16 +28,22 @@ jobs:
       - id: set-matrix
         run: ./hack/resolve-modules.sh
 
-  lint:
-    name: lint module
+  golangci-lint:
     runs-on: ubuntu-latest
-    needs: resolve-modules
-    strategy:
-      matrix: ${{ fromJson(needs.resolve-modules.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Lint
-        uses: golangci/golangci-lint-action@v3
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          # for self-hosted, the cache path is shared across projects
+          # and it works well without the cache of github actions
+          # Enable it if we're going to use Github only
+          cache: true
+
+      - name: Golangci Lint
+        # https://golangci-lint.run/
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           working-directory: ${{ matrix.workdir }}

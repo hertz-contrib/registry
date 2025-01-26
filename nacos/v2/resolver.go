@@ -101,7 +101,12 @@ func (n *nacosResolver) Resolve(_ context.Context, desc string) (discovery.Resul
 }
 
 func (n *nacosResolver) Name() string {
-	return "nacos" + ":" + n.opts.cluster + ":" + n.opts.group
+	var name strings.Builder
+	name.WriteString("nacos" + ":" + n.opts.cluster + ":" + n.opts.group)
+	for _, config := range n.opts.serverConfig {
+		name.WriteString(":" + config.IpAddr + ":" + strconv.FormatUint(config.Port, 10))
+	}
+	return name.String()
 }
 
 // NewDefaultNacosResolver create a default service resolver using nacos.

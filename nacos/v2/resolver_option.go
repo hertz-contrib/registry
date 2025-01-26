@@ -14,9 +14,12 @@
 
 package nacos
 
+import "github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+
 type resolverOptions struct {
-	cluster string
-	group   string
+	cluster      string
+	group        string
+	serverConfig []constant.ServerConfig
 }
 
 // ResolverOption Option is nacos registry option.
@@ -33,5 +36,12 @@ func WithResolverCluster(cluster string) ResolverOption {
 func WithResolverGroup(group string) ResolverOption {
 	return func(o *resolverOptions) {
 		o.group = group
+	}
+}
+
+// WithNacosServersConfig with nacos server config option.
+func WithNacosServersConfig(serverConfig []constant.ServerConfig) ResolverOption {
+	return func(o *resolverOptions) {
+		o.serverConfig = serverConfig
 	}
 }

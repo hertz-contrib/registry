@@ -16,20 +16,24 @@ jobs:
       - name: Check Spell
         uses: crate-ci/typos@master
 
-  resolve-modules:
-    name: resolve module
+  detect-modules:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      modules: ${{ steps.set-modules.outputs.modules }}
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - id: set-matrix
-        run: ./hack/resolve-modules.sh
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - id: set-modules
+        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
 
   golangci-lint:
+    needs: detect-modules
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
@@ -46,6 +50,6 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          working-directory: ${{ matrix.workdir }}
+          working-directory: ${{ matrix.modules }}
           args: -E gofumpt --timeout 10m
           skip-cache: true

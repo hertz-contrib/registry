@@ -1,6 +1,6 @@
 name: Pull Request Check
 
-on: [ pull_request ]
+on: [pull_request]
 
 jobs:
   compliant:
@@ -48,4 +48,4 @@ jobs:
           version: latest
           working-directory: ${{ matrix.workdir }}
           args: -E gofumpt --timeout 10m
-          skip-pkg-cache: true
+          skip-cache: true

@@ -16,7 +16,7 @@ source "${HOME}/hack/util.sh"
 all_modules=$(util::find_modules)
 PATHS=""
 for mod in $all_modules; do
-		PATHS+=$(printf '{"workdir":"%s"},' ${mod})
+	PATHS+=$(printf '{"workdir":"%s"},' ${mod})
 done
 
-echo "::set-output name=matrix::{\"include\":[${PATHS%?}]}"
+echo "matrix={\"include\":[${PATHS%?}]}" >>$GITHUB_OUTPUT

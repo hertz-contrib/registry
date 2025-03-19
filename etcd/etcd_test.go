@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"testing"
@@ -418,14 +417,23 @@ func TestRetryCustomConfig(t *testing.T) {
 }
 
 func setupEmbedEtcd(t *testing.T) (*embed.Etcd, string) {
-	endpoint := fmt.Sprintf("unix://localhost:%06d", os.Getpid())
+	pid := os.Getpid()
+	endpoint := fmt.Sprintf("http://localhost:%06d", pid)
+	peerEndpoint := fmt.Sprintf("http://localhost:%06d", pid+1)
 	u, err := url.Parse(endpoint)
 	require.Nil(t, err)
-	dir, err := ioutil.TempDir("", "etcd_resolver_test")
+	p, err := url.Parse(peerEndpoint)
+	require.Nil(t, err)
+	dir, err := os.MkdirTemp("", "etcd_resolver_test")
 	require.Nil(t, err)
 
 	cfg := embed.NewConfig()
 	cfg.LCUrls = []url.URL{*u}
+	cfg.ACUrls = []url.URL{*u}
+	cfg.LPUrls = []url.URL{*p}
+	cfg.APUrls = []url.URL{*p}
+	cfg.Name = "test"
+	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 	// disable etcd log
 	cfg.LogLevel = "panic"
 	cfg.Dir = dir

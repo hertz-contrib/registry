@@ -560,7 +560,7 @@ func TestHertzAppWithNacosRegistry(t *testing.T) {
 	defer cancelFunc()
 	srv.Shutdown(ctx) //nolint:errcheck // ignore error
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(6 * time.Second)
 	status, body, err = newClient.Get(context.Background(), nil, "http://d.h.t/ping",
 		config.WithSD(true))
 	assert.NotNil(t, err)

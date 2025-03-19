@@ -1,0 +1,13 @@
+go 1.18
+
+use (
+	./consul
+	./etcd
+	./eureka
+	./nacos
+	./nacos/v2
+	./polaris
+	./redis
+	./servicecomb
+	./zookeeper
+)
